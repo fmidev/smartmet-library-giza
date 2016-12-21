@@ -21,7 +21,7 @@ INCLUDES = \
 
 LIBS = 	$$(pkg-config --libs librsvg-2.0) \
 	$$(pkg-config --libs cairo) \
-	../libsmartmet_giza.so \
+	../libsmartmet-giza.so \
 	-lboost_filesystem \
 	-lboost_system
 
@@ -36,5 +36,5 @@ test: $(PROG)
 	./$$prog; \
 	done
 
-$(PROG) : % : %.cpp ../libsmartmet_giza.so
+$(PROG) : % : %.cpp ../libsmartmet-giza.so
 	$(CC) $(CFLAGS) -o $@ $@.cpp $(INCLUDES) $(LIBS)

@@ -1,9 +1,11 @@
-%define LIBNAME giza
+%define DIRNAME giza
+%define LIBNAME smartmet-%{DIRNAME}
+%define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
-Name: libsmartmet-%{LIBNAME}
-Version: 15.8.27
+Name: %{SPECNAME}
+Version: 16.12.21
 Release: 1%{?dist}.fmi
-License: FMI
+License: MIT
 Group: Development/Libraries
 URL: http://www.weatherproof.fi
 Source0: %{name}.tar.gz
@@ -13,7 +15,9 @@ BuildRequires: librsvg2-devel >= 2.40.6
 BuildRequires: cairo-devel
 Requires: cairo
 Requires: librsvg2 >= 2.40.6
-Provides: %{LIBNAME}
+Provides: %{SPECNAME}
+Obsoletes: libsmartmet-giza < 16.12.21
+Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 
 %description
 FMI Extensions to Cairo Graphics
@@ -21,7 +25,7 @@ FMI Extensions to Cairo Graphics
 %prep
 rm -rf $RPM_BUILD_ROOT
 
-%setup -q -n %{LIBNAME}
+%setup -q -n %{DIRNAME}
  
 %build
 make %{_smp_mflags}
@@ -34,21 +38,25 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(0775,root,root,0775)
-%{_libdir}/libsmartmet_%{LIBNAME}.so
+%{_libdir}/libsmartmet-%{DIRNAME}.so
 
-%package -n libsmartmet-%{LIBNAME}-devel
+%package -n %{SPECNAME}-devel
 Summary: Giza development files
-Provides: %{LIBNAME}-devel
-Requires: libsmartmet-giza
+Provides: %{SPECNAME}-devel
+Requires: smartmet-library-giza
+Obsoletes: libsmartmet-giza-devel < 16.12.21
 
-%description -n libsmartmet-%{LIBNAME}-devel
+%description -n %{SPECNAME}-devel
 Giza library development files
 
-%files -n libsmartmet-%{LIBNAME}-devel
+%files -n %{SPECNAME}-devel
 %defattr(0664,root,root,0775)
-%{_includedir}/smartmet/%{LIBNAME}
+%{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Wed Dec 21 2016 Mika Heiskanen <mika.heiskanen@fmi.fi> - 16.12.21-1.fmi
+- Switched to open source naming conventions
+
 * Thu Aug 27 2015 Mika Heiskanen <mika.heiskanen@fmi.fi> - 15.8.27-1.fmi
 - PNG images are now saved in palette mode when possible
 
