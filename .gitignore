@@ -1,0 +1,7 @@
+*~
+obj/
+libsmartmet_giza.so
+*Test
+test/failures/*
+
+
