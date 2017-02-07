@@ -79,10 +79,6 @@ LIBS = -L$(libdir) \
 	$$(pkg-config --libs librsvg-2.0) \
 	$$(pkg-config --libs cairo)
 
-# rpm variables
-
-rpmsourcedir = /tmp/$(shell whoami)/rpmbuild
-
 # What to install
 
 LIBFILE = libsmartmet-$(SUBNAME).so
@@ -104,13 +100,13 @@ endif
 
 # Compilation directories
 
-vpath %.cpp source
-vpath %.h include
+vpath %.cpp $(SUBNAME)
+vpath %.h $(SUBNAME)
 
 # The files to be compiled
 
-SRCS = $(wildcard source/*.cpp)
-HDRS = $(wildcard include/*.h)
+SRCS = $(wildcard $(SUBNAME)/*.cpp)
+HDRS = $(wildcard $(SUBNAME)/*.h)
 OBJS = $(patsubst %.cpp, obj/%.o, $(notdir $(SRCS)))
 
 INCLUDES := -Iinclude $(INCLUDES)
@@ -128,11 +124,11 @@ $(LIBFILE): $(OBJS)
 	$(CXX) $(CFLAGS) -shared -rdynamic -o $(LIBFILE) $(OBJS) $(LIBS)
 
 clean:
-	rm -f $(LIBFILE) *~ source/*~ include/*~
+	rm -f $(LIBFILE) *~ $(SUBNAME)/*~
 	rm -rf $(objdir)
 
 format:
-	clang-format -i -style=file include/*.h source/*.cpp test/*.cpp
+	clang-format -i -style=file $(SUBNAME)/*.h $(SUBNAME)/*.cpp test/*.cpp
 
 install:
 	@mkdir -p $(includedir)/$(INCDIR)
@@ -154,10 +150,9 @@ objdir:
 rpm: clean
 	if [ -e $(SPEC).spec ]; \
 	then \
-	  mkdir -p $(rpmsourcedir) ; \
-	  tar -czvf $(rpmsourcedir)/$(SPEC).tar.gz --transform "s,^,$(SPEC)/," * ; \
-	  rpmbuild -ta $(rpmsourcedir)/$(SPEC).tar.gz ; \
-	  rm -f $(rpmsourcedir)/$(SPEC).tar.gz ; \
+	  tar -czvf $(SPEC).tar.gz --transform "s,^,$(SPEC)/," * ; \
+	  rpmbuild -ta $(SPEC).tar.gz ; \
+	  rm -f $(SPEC).tar.gz ; \
 	else \
 	  echo $(SPEC).spec file missing; \
 	fi;

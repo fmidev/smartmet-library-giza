@@ -14,7 +14,7 @@ CC = g++
 CFLAGS = -DUNIX -O0 -g $(MAINFLAGS) -Wno-write-strings
 
 INCLUDES = \
-	-I ../include \
+	-I ../giza \
 	-I /usr/include/smartmet \
 	$$(pkg-config --cflags librsvg-2.0) \
 	$$(pkg-config --cflags cairo)
