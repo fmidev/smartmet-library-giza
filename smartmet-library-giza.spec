@@ -43,7 +43,6 @@ rm -rf $RPM_BUILD_ROOT
 %package -n %{SPECNAME}-devel
 Summary: Giza development files
 Provides: %{SPECNAME}-devel
-Requires: smartmet-library-giza
 Obsoletes: libsmartmet-giza-devel < 16.12.21
 
 %description -n %{SPECNAME}-devel
