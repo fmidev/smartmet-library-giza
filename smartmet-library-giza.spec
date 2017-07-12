@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 16.12.21
+Version: 17.7.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -53,6 +53,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Wed Jul 12 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.7.12-1.fmi
+- Always produce EPS instead of plain PS.
+
 * Wed Dec 21 2016 Mika Heiskanen <mika.heiskanen@fmi.fi> - 16.12.21-1.fmi
 - Switched to open source naming conventions
 

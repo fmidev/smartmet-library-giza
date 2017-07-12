@@ -1,11 +1,11 @@
 #include "Svg.h"
-#include "Giza.h"
 #include "ColorMapper.h"
+#include "Giza.h"
 
-#include <librsvg/rsvg.h>
-#include <cairo/cairo.h>
 #include <cairo/cairo-pdf.h>
 #include <cairo/cairo-ps.h>
+#include <cairo/cairo.h>
+#include <librsvg/rsvg.h>
 #include <stdexcept>
 
 // Note: In RHEL6 fontconfig, pango, cairo combination was not thread safe
@@ -53,8 +53,12 @@ std::string svg_to_pdf_or_ps(const std::string &svg, bool ispdf)
     image = cairo_pdf_surface_create_for_stream(
         stream_to_buffer, &buffer, dimensions.width, dimensions.height);
   else
+  {
     image = cairo_ps_surface_create_for_stream(
         stream_to_buffer, &buffer, dimensions.width, dimensions.height);
+    // we always produce eps only
+    cairo_ps_surface_set_eps(image, true);
+  }
 
   cr = cairo_create(image);
   rsvg_handle_render_cairo(handle, cr);
