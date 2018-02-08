@@ -1,8 +1,8 @@
-#include <regression/tframe.h>
+#include "Svg.h"
 #include <boost/filesystem.hpp>
 #include <boost/functional/hash.hpp>
+#include <regression/tframe.h>
 #include <fstream>
-#include "Svg.h"
 
 using namespace std;
 
@@ -32,6 +32,24 @@ void topng()
   std::string infile = "input/svg1.svg";
   std::string outfile = "output/png_svg1.png";
   std::string testfile = "failures/png_svg1.png";
+
+  std::string svg = readfile(infile);
+  writefile(testfile, Giza::Svg::topng(svg));
+  if (filehash(testfile) != filehash(outfile))
+    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+
+  boost::filesystem::remove(testfile);
+
+  TEST_PASSED();
+}
+
+// ----------------------------------------------------------------------
+
+void topng_transparency()
+{
+  std::string infile = "input/svg2.svg";
+  std::string outfile = "output/png_svg2.png";
+  std::string testfile = "failures/png_svg2.png";
 
   std::string svg = readfile(infile);
   writefile(testfile, Giza::Svg::topng(svg));
@@ -89,6 +107,7 @@ class tests : public tframe::tests
   {
     TEST(topng);
     TEST(topdf);
+    TEST(topng_transparency);
     // TEST(tops);	// CreationDate changes every time!
   }
 

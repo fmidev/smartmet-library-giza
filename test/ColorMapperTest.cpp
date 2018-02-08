@@ -1,8 +1,8 @@
-#include <regression/tframe.h>
+#include "ColorMapper.h"
 #include <boost/filesystem.hpp>
 #include <boost/functional/hash.hpp>
+#include <regression/tframe.h>
 #include <fstream>
-#include "ColorMapper.h"
 
 using namespace std;
 
@@ -149,6 +149,27 @@ void maxcolors()
   TEST_PASSED();
 }
 
+void transparency()
+{
+  std::string infile = "input/quantize2.png";
+  std::string outfile = "output/transparency_quantize2.png";
+  std::string testfile = "failures/transparency_quantize2.png";
+
+  auto* image = cairo_image_surface_create_from_png(infile.c_str());
+  Giza::ColorMapper mapper;
+  mapper.reduce(image);
+  auto status = cairo_surface_write_to_png(image, testfile.c_str());
+  if (status != CAIRO_STATUS_SUCCESS)
+    TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
+
+  if (filehash(testfile) != filehash(outfile))
+    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+
+  boost::filesystem::remove(testfile);
+
+  TEST_PASSED();
+}
+
 // Test driver
 class tests : public tframe::tests
 {
@@ -160,6 +181,7 @@ class tests : public tframe::tests
     TEST(defaults);
     TEST(quality);
     TEST(maxcolors);
+    TEST(transparency);
   }
 
 };  // class tests
