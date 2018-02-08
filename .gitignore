@@ -1,6 +1,7 @@
+compile_commands.json
 *~
 obj/
-libsmartmet_giza.so
+libsmartmet-giza.so
 *Test
 test/failures/*
 
