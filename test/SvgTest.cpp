@@ -63,6 +63,24 @@ void topng_transparency()
 
 // ----------------------------------------------------------------------
 
+void topng_transparent_symbols()
+{
+  std::string infile = "input/svg3.svg";
+  std::string outfile = "output/png_svg3.png";
+  std::string testfile = "failures/png_svg3.png";
+
+  std::string svg = readfile(infile);
+  writefile(testfile, Giza::Svg::topng(svg));
+  if (filehash(testfile) != filehash(outfile))
+    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+
+  boost::filesystem::remove(testfile);
+
+  TEST_PASSED();
+}
+
+// ----------------------------------------------------------------------
+
 void topdf()
 {
   std::string infile = "input/svg1.svg";
@@ -108,6 +126,7 @@ class tests : public tframe::tests
     TEST(topng);
     TEST(topdf);
     TEST(topng_transparency);
+    TEST(topng_transparent_symbols);
     // TEST(tops);	// CreationDate changes every time!
   }
 

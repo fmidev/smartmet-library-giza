@@ -298,14 +298,40 @@ ColorTree::ColorTree()
  */
 // ----------------------------------------------------------------------
 
+#if 0
+inline static double colordiff(double x, double y, double a)
+{
+  double b = x - y;
+  double w = b + a;
+  return b * b + w * w;
+}
+#endif
+
 double ColorTree::distance(Color color1, Color color2)
 {
+#if 1
   const double r = gammacorr(red(color1)) - gammacorr(red(color2));
   const double g = gammacorr(green(color1)) - gammacorr(green(color2));
   const double b = gammacorr(blue(color1)) - gammacorr(blue(color2));
-  const double a = 1.0 * (alpha(color1) - alpha(color2));
-
+  const double a = alpha(color1) - alpha(color2);
   return sqrt(3 * r * r + 4 * g * g + 2 * b * b + a * a);
+#endif
+
+#if 0
+  double a = alpha(color1) - alpha(color2);
+  return (colordiff(red(color1), red(color2), a) + colordiff(green(color1), green(color2), a) +
+          colordiff(blue(color1), blue(color2), a));
+#endif
+
+#if 0
+  int rmean = (red(color1) + red(color2)) / 2;
+  int r = red(color1) - red(color2);
+  int g = green(color1) - green(color2);
+  int b = blue(color1) - blue(color2);
+  int a = alpha(color1) - alpha(color2);
+  return sqrt((((512 + rmean) * r * r) >> 8) + 4 * g * g + (((767 - rmean) * b * b) >> 8) +
+              4 * a * a);
+#endif
 }
 
 // ----------------------------------------------------------------------

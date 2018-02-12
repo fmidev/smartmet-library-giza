@@ -2,9 +2,9 @@
 #include "ColorMapper.h"
 #include <boost/foreach.hpp>
 #include <cairo/cairo.h>
+#include <map>
 #include <png.h>
 #include <set>
-#include <map>
 #include <stdexcept>
 #include <vector>
 
@@ -48,7 +48,7 @@ static void append_to_string(png_structp png, png_bytep data, png_size_t length)
 }
 
 void giza_surface_write_to_png_string(cairo_surface_t *image,
-                                      const ColorMap &colormap,
+                                      const ColorMapper &mapper,
                                       std::string &buffer)
 {
   // Do pending operations
@@ -90,13 +90,16 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
   // Determine the unique colours in the colour conversion map, and
   // set true colour mode if there are more than 256 colours.
 
+  const auto &colormap = mapper.colormap();
+
   std::set<Color> unique_colors;
-  BOOST_FOREACH (const ColorMap::value_type &from_to, colormap)
+  if (!mapper.truecolor())
   {
-    unique_colors.insert(from_to.second);
+    for (const ColorMap::value_type &from_to : colormap)
+      unique_colors.insert(from_to.second);
   }
 
-  bool truecolor = (unique_colors.size() > 256);
+  bool truecolor = (mapper.truecolor() || unique_colors.size() > 256);
 
   // Generate the PNG data to the output
 
@@ -162,7 +165,7 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
     // This will store the colour map index for each colour
     std::map<Color, int> color_indices;
 
-    BOOST_FOREACH (Color color, unique_colors)
+    for (const Color color : unique_colors)
     {
       // Store the index for this new unique colour
       color_indices.insert(std::make_pair(color, color_indices.size()));
@@ -229,7 +232,7 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
     png_destroy_write_struct(&png, &info);
   }
 }
-}
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -243,7 +246,7 @@ std::string topng(cairo_surface_t *image)
   mapper.reduce(image);
 
   std::string buffer;
-  giza_surface_write_to_png_string(image, mapper.colormap(), buffer);
+  giza_surface_write_to_png_string(image, mapper, buffer);
   return buffer;
 }
 
