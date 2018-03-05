@@ -8,9 +8,6 @@
 #include <unordered_map>
 #include <vector>
 
-#pragma message("Remove")
-#include <iostream>
-
 namespace Giza
 {
 // ----------------------------------------------------------------------
@@ -498,33 +495,42 @@ void ColorMapper::reduce(cairo_surface_t *image)
   ColorHistogram hist = colorhistogram(image);
 
   // Abort if we should use RGBA:
-  // - there are many unique colours
   // - there are many different alpha values
   // - smallest alpha is below some limit
 
-  if (hist.size() >= 256)
+  const int max_unique_alphas = 100;
+  const unsigned char max_min_alpha = 128;
+
+  unsigned char min_alpha = 255;
+  std::vector<int> alphas(256, 0);
+  for (const auto &c : hist)
   {
-    const int max_unique_alphas = 100;
-    const unsigned char max_min_alpha = 128;
+    auto a = alpha(c.color);
+    alphas[a] = 1;
+    min_alpha = std::min(min_alpha, a);
+  }
+  int num_alphas = std::count(alphas.begin(), alphas.end(), 1);
 
-    unsigned char min_alpha = 255;
-    std::vector<int> alphas(256, 0);
-    for (const auto &c : hist)
-    {
-      auto a = alpha(c.color);
-      alphas[a] = 1;
-      min_alpha = std::min(min_alpha, a);
-    }
-    int num_alphas = std::count(alphas.begin(), alphas.end(), 1);
-
-    if (num_alphas > max_unique_alphas || (min_alpha < max_min_alpha))
+  if (num_alphas > max_unique_alphas || (min_alpha < max_min_alpha))
+  {
+    if (hist.size() >= 256)
     {
       itsTrueColor = true;
       return;
     }
+    // Now we want palette mode but no color reductions
+
+    itsTrueColor = false;
+
+    // Identify mapping
+    itsColorMap.clear();
+    for (const auto &c : hist)
+      itsColorMap.insert(ColorMap::value_type(c.color, c.color));
+    return;
   }
 
-  // Select the colors
+  // Select the colors and perform the replacements. Subsequent operations
+  // will use the ColorMap to produce the palette.
 
   ColorTree tree;
   itsColorMap.clear();

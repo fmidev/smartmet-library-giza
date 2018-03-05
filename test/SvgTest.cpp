@@ -65,16 +65,44 @@ void topng_transparency()
 
 void topng_transparent_symbols()
 {
-  std::string infile = "input/svg3.svg";
-  std::string outfile = "output/png_svg3.png";
-  std::string testfile = "failures/png_svg3.png";
+  {
+    std::string infile = "input/svg3.svg";
+    std::string outfile = "output/png_svg3.png";
+    std::string testfile = "failures/png_svg3.png";
 
-  std::string svg = readfile(infile);
-  writefile(testfile, Giza::Svg::topng(svg));
-  if (filehash(testfile) != filehash(outfile))
-    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+    std::string svg = readfile(infile);
+    writefile(testfile, Giza::Svg::topng(svg));
+    if (filehash(testfile) != filehash(outfile))
+      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
 
-  boost::filesystem::remove(testfile);
+    boost::filesystem::remove(testfile);
+  }
+
+  {
+    std::string infile = "input/svg4.svg";
+    std::string outfile = "output/png_svg4.png";
+    std::string testfile = "failures/png_svg4.png";
+
+    std::string svg = readfile(infile);
+    writefile(testfile, Giza::Svg::topng(svg));
+    if (filehash(testfile) != filehash(outfile))
+      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+
+    boost::filesystem::remove(testfile);
+  }
+
+  {
+    std::string infile = "input/svg5.svg";
+    std::string outfile = "output/png_svg5.png";
+    std::string testfile = "failures/png_svg5.png";
+
+    std::string svg = readfile(infile);
+    writefile(testfile, Giza::Svg::topng(svg));
+    if (filehash(testfile) != filehash(outfile))
+      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+
+    boost::filesystem::remove(testfile);
+  }
 
   TEST_PASSED();
 }

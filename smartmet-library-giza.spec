@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 18.2.12
+Version: 18.3.5
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -57,6 +57,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Mon Mar  5 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.3.5-1.fmi
+- Less aggressive color reduction with transparent images even when palette size is smaller than 256
+
 * Mon Feb 12 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.2.12-1.fmi
 - Less aggressive color reduction of images with lots of transparency
 
