@@ -339,69 +339,33 @@ ColorHistogram colorhistogram(cairo_surface_t *image)
   return histogram;
 }
 
-// ======================================================================
-// The actual public interfaces
-// ======================================================================
-
-ColorMapper::ColorMapper()
-    : itsQuality(10.0)  // 10 = good, 20 = poor etc
-      ,
-      itsErrorFactor(2.0)  // good default if max colors is set
-      ,
-      itsMaxColors(0)  // <=0 implies adaptive reduction
-{
-}
-
 // ----------------------------------------------------------------------
 /*!
- * \brief Return true if truecolor is to be used
+ * \brief Set colormapper options
  */
 // ----------------------------------------------------------------------
 
-bool ColorMapper::truecolor() const { return itsTrueColor; }
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Set the desired quality. Guideline: 10 = good, 20 = poor
- */
-// ----------------------------------------------------------------------
-
-void ColorMapper::setQuality(double quality)
+void ColorMapper::options(const ColorMapOptions &theOptions)
 {
-  if (quality < 1)
+  itsOptions = theOptions;
+
+  if (itsOptions.quality < 1)
     throw std::runtime_error("Requested relative color map quality must be at least 1, value " +
-                             boost::lexical_cast<std::string>(quality) + " was given");
-  itsQuality = quality;
-}
+                             boost::lexical_cast<std::string>(itsOptions.quality) + " was given");
 
-// ----------------------------------------------------------------------
-/*!
- * \brief Set the desired number of maximum colors.
- *
- * The setting may not be obeyed if it would require removing
- * solid 3x3 colour blocks. A value <= 0 implies no maximum.
- */
-// ----------------------------------------------------------------------
-
-void ColorMapper::setMaxColors(int maxcolors) { itsMaxColors = maxcolors; }
-// ----------------------------------------------------------------------
-/*!
- * \brief Set the amount of quality reduction per iteration
- *
- * The default value 2 means the requested quality is halved
- * during each iteration if the requested number of max colors
- * cannot be reached. The value must be at least 1.1 to obtain
- * sensible convergence rates.
- */
-// ----------------------------------------------------------------------
-
-void ColorMapper::setErrorFactor(double errorfactor)
-{
-  if (errorfactor < 1.1)
+  if (itsOptions.errorfactor < 1.1)
     throw std::runtime_error("Image color quantization error factor must be at least 1.1, value " +
-                             boost::lexical_cast<std::string>(errorfactor) + " was given");
-  itsErrorFactor = errorfactor;
+                             boost::lexical_cast<std::string>(itsOptions.errorfactor) +
+                             " was given");
 }
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Return true of true color mode is forced
+ */
+// ----------------------------------------------------------------------
+
+bool ColorMapper::trueColor() const { return itsOptions.truecolor; }
 
 // ----------------------------------------------------------------------
 /*!
@@ -490,6 +454,9 @@ Histogram ColorMapper::histogram(cairo_surface_t *image) const
 
 void ColorMapper::reduce(cairo_surface_t *image)
 {
+  // Skip histogram etc if true color is forced
+  if (itsOptions.truecolor) return;
+
   // Calculate the histogram
 
   ColorHistogram hist = colorhistogram(image);
@@ -515,12 +482,12 @@ void ColorMapper::reduce(cairo_surface_t *image)
   {
     if (hist.size() >= 256)
     {
-      itsTrueColor = true;
+      itsOptions.truecolor = true;
       return;
     }
     // Now we want palette mode but no color reductions
 
-    itsTrueColor = false;
+    itsOptions.truecolor = false;
 
     // Identify mapping
     itsColorMap.clear();
@@ -535,10 +502,16 @@ void ColorMapper::reduce(cairo_surface_t *image)
   ColorTree tree;
   itsColorMap.clear();
 
-  if (itsMaxColors <= 0)
-    build_tree(image, hist, tree, itsColorMap, itsQuality);
+  if (itsOptions.maxcolors <= 0)
+    build_tree(image, hist, tree, itsColorMap, itsOptions.quality);
   else
-    build_tree(image, hist, tree, itsColorMap, itsQuality, itsMaxColors, itsErrorFactor);
+    build_tree(image,
+               hist,
+               tree,
+               itsColorMap,
+               itsOptions.quality,
+               itsOptions.maxcolors,
+               itsOptions.errorfactor);
 
   replace_colors(image, itsColorMap);
 }

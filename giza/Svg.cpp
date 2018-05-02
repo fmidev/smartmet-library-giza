@@ -84,6 +84,18 @@ namespace Svg
 
 std::string topng(const std::string &svg)
 {
+  ColorMapOptions options;
+  return topng(svg, options);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Convert SVG to PNG in memory
+ */
+// ----------------------------------------------------------------------
+
+std::string topng(const std::string &svg, const ColorMapOptions &options)
+{
   cairo_surface_t *image = NULL;
   cairo_t *cr = NULL;
   RsvgHandle *handle = NULL;
@@ -107,7 +119,7 @@ std::string topng(const std::string &svg)
 
   g_object_unref(handle);  // Deprecated: rsvg_handle_free(handle);
 
-  std::string buffer = Giza::topng(image);
+  std::string buffer = Giza::topng(image, options);
 
   cairo_surface_destroy(image);
   cairo_destroy(cr);

@@ -93,13 +93,13 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
   const auto &colormap = mapper.colormap();
 
   std::set<Color> unique_colors;
-  if (!mapper.truecolor())
+  if (!mapper.trueColor())
   {
     for (const ColorMap::value_type &from_to : colormap)
       unique_colors.insert(from_to.second);
   }
 
-  bool truecolor = (mapper.truecolor() || unique_colors.size() > 256);
+  bool truecolor = (mapper.trueColor() || unique_colors.size() > 256);
 
   // Generate the PNG data to the output
 
@@ -243,6 +243,23 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
 std::string topng(cairo_surface_t *image)
 {
   ColorMapper mapper;
+  mapper.reduce(image);
+
+  std::string buffer;
+  giza_surface_write_to_png_string(image, mapper, buffer);
+  return buffer;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Write cairo surface to a PNG string
+ */
+// ----------------------------------------------------------------------
+
+std::string topng(cairo_surface_t *image, const ColorMapOptions &options)
+{
+  ColorMapper mapper;
+  mapper.options(options);
   mapper.reduce(image);
 
   std::string buffer;

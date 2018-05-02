@@ -50,9 +50,14 @@ void quality()
     std::string testfile = "failures/quality20_quantize1.png";
 
     auto* image = cairo_image_surface_create_from_png(infile.c_str());
+
+    Giza::ColorMapOptions options;
+    options.quality = 20;
+
     Giza::ColorMapper mapper;
-    mapper.setQuality(20);
+    mapper.options(options);
     mapper.reduce(image);
+
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
@@ -69,8 +74,13 @@ void quality()
     std::string testfile = "failures/quality50_quantize1.png";
 
     auto* image = cairo_image_surface_create_from_png(infile.c_str());
+
+    Giza::ColorMapOptions options;
+    options.quality = 50;
+
     Giza::ColorMapper mapper;
-    mapper.setQuality(50);
+    mapper.options(options);
+
     mapper.reduce(image);
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
     if (status != CAIRO_STATUS_SUCCESS)
@@ -95,9 +105,15 @@ void maxcolors()
     std::string testfile = "failures/maxcolors100_quantize1.png";
 
     auto* image = cairo_image_surface_create_from_png(infile.c_str());
+
+    Giza::ColorMapOptions options;
+    options.maxcolors = 100;
+
     Giza::ColorMapper mapper;
-    mapper.setMaxColors(100);
+    mapper.options(options);
+
     mapper.reduce(image);
+
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
@@ -114,8 +130,13 @@ void maxcolors()
     std::string testfile = "failures/maxcolors60_quantize1.png";
 
     auto* image = cairo_image_surface_create_from_png(infile.c_str());
+
+    Giza::ColorMapOptions options;
+    options.maxcolors = 60;
+
     Giza::ColorMapper mapper;
-    mapper.setMaxColors(60);
+    mapper.options(options);
+
     mapper.reduce(image);
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
     if (status != CAIRO_STATUS_SUCCESS)
@@ -133,8 +154,13 @@ void maxcolors()
     std::string testfile = "failures/maxcolors30_quantize1.png";
 
     auto* image = cairo_image_surface_create_from_png(infile.c_str());
+
+    Giza::ColorMapOptions options;
+    options.maxcolors = 30;
+
     Giza::ColorMapper mapper;
-    mapper.setMaxColors(30);
+    mapper.options(options);
+
     mapper.reduce(image);
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
     if (status != CAIRO_STATUS_SUCCESS)
@@ -156,8 +182,10 @@ void transparency()
   std::string testfile = "failures/transparency_quantize2.png";
 
   auto* image = cairo_image_surface_create_from_png(infile.c_str());
+
   Giza::ColorMapper mapper;
   mapper.reduce(image);
+
   auto status = cairo_surface_write_to_png(image, testfile.c_str());
   if (status != CAIRO_STATUS_SUCCESS)
     TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
