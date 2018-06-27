@@ -34,14 +34,14 @@ cairo_status_t stream_to_buffer(void *closure, const unsigned char *data, unsign
 
 std::string svg_to_pdf_or_ps(const std::string &svg, bool ispdf)
 {
-  cairo_surface_t *image = NULL;
-  cairo_t *cr = NULL;
-  RsvgHandle *handle = NULL;
+  cairo_surface_t *image = nullptr;
+  cairo_t *cr = nullptr;
+  RsvgHandle *handle = nullptr;
 
   const guint8 *indata = reinterpret_cast<const guint8 *>(svg.c_str());
 
   handle =
-      rsvg_handle_new_from_data_with_flags(indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, NULL);
+      rsvg_handle_new_from_data_with_flags(indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
 
   if (!handle) throw std::runtime_error("Failed to get rsvg handle on the SVG data");
 
@@ -96,17 +96,17 @@ std::string topng(const std::string &svg)
 
 std::string topng(const std::string &svg, const ColorMapOptions &options)
 {
-  cairo_surface_t *image = NULL;
-  cairo_t *cr = NULL;
-  RsvgHandle *handle = NULL;
+  cairo_surface_t *image = nullptr;
+  cairo_t *cr = nullptr;
+  RsvgHandle *handle = nullptr;
 
   {
     // BrainStorm::WriteLock lock(globalPngMutex);
 
     const guint8 *indata = reinterpret_cast<const guint8 *>(svg.c_str());
 
-    handle =
-        rsvg_handle_new_from_data_with_flags(indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, NULL);
+    handle = rsvg_handle_new_from_data_with_flags(
+        indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
 
     if (!handle) throw std::runtime_error("Failed to get rsvg handle on the SVG data");
 

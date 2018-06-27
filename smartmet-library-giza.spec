@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 18.5.2
+Version: 18.6.27
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -58,6 +58,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Wed Jun 27 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.6.27-1.fmi
+- Maintenance release: use nullptr instead of NULL
+
 * Wed May  2 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.5.2-1.fmi
 - Added possibility to control SVG to PNG color reduction
 
