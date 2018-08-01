@@ -1,6 +1,5 @@
 #include "Giza.h"
 #include "ColorMapper.h"
-#include <boost/foreach.hpp>
 #include <cairo/cairo.h>
 #include <map>
 #include <png.h>
