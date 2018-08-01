@@ -11,8 +11,16 @@ namespace Giza
 {
 namespace
 {
+/* Unpremultiply a single colour component */
+
+png_byte unpremultiply_color_component(png_byte component, png_byte alpha)
+{
+  if (alpha == 0) return 0;
+  return (component * 255 + alpha / 2) / alpha;
+}
+
 /* Unpremultiplies data and converts native endian ARGB => RGBA bytes */
-static void unpremultiply_data(png_structp png, png_row_infop row_info, png_bytep data)
+void unpremultiply_data(png_structp png, png_row_infop row_info, png_bytep data)
 {
   unsigned int i;
 
@@ -125,8 +133,6 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
                  PNG_FILTER_TYPE_DEFAULT);
 
     png_write_info(png, info);
-    // Well, I have to admit I just copied this call from elsewhere.
-    // No idea if and when it is needed.
     png_set_write_user_transform_fn(png, unpremultiply_data);
     png_write_image(png, rows.data());
     png_write_end(png, info);
@@ -171,12 +177,15 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
       color_indices.insert(std::make_pair(color, color_indices.size()));
 
       // And inform libpng of its properties
-      color_values[num_colors].red = static_cast<png_byte>(red(color));
-      color_values[num_colors].green = static_cast<png_byte>(green(color));
-      color_values[num_colors].blue = static_cast<png_byte>(blue(color));
+      auto a = static_cast<png_byte>(alpha(color));
+      color_values[num_colors].red =
+          unpremultiply_color_component(static_cast<png_byte>(red(color)), a);
+      color_values[num_colors].green =
+          unpremultiply_color_component(static_cast<png_byte>(green(color)), a);
+      color_values[num_colors].blue =
+          unpremultiply_color_component(static_cast<png_byte>(blue(color)), a);
 
       // No need to skip storing here even if num_transparent increases no longer
-      int a = alpha(color);
       transparent_values[num_colors] = a;
 
       ++num_colors;
@@ -205,10 +214,9 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
     // Set the opaque RGB palette
     png_set_PLTE(png, info, color_values, num_colors);
 
-    // Write PNG preamble
-    png_write_info(png, info);
-
     // Write PNG raw data
+
+    png_write_info(png, info);
 
     // Using this vector of palette indices to convert all rows in the ARGB cairo input
     std::vector<png_byte> rows(width, 0);
