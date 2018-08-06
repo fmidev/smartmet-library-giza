@@ -285,10 +285,7 @@ inline double gammacorr(int color)
  */
 // ----------------------------------------------------------------------
 
-ColorTree::ColorTree()
-    : maxleft(-1.0), maxright(-1.0), treesize(0), leftcolor(), rightcolor(), left(), right()
-{
-}
+ColorTree::ColorTree() : maxleft(-1.0), maxright(-1.0), treesize(0) {}
 
 // ----------------------------------------------------------------------
 /*!
