@@ -20,7 +20,7 @@ png_byte unpremultiply_color_component(png_byte component, png_byte alpha)
 }
 
 /* Unpremultiplies data and converts native endian ARGB => RGBA bytes */
-void unpremultiply_data(png_structp png, png_row_infop row_info, png_bytep data)
+void unpremultiply_data(png_structp /* png */, png_row_infop row_info, png_bytep data)
 {
   unsigned int i;
 
