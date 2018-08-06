@@ -8,7 +8,7 @@ namespace Giza
  */
 // ----------------------------------------------------------------------
 
-Palette::Palette(const ColorMap& colormap) : itsSize(0), itsPalette()
+Palette::Palette(const ColorMap& colormap) : itsSize(0)
 {
   // Assign unique index for all colours staring from zero.
   // Since there are potentially long sequences of color,
@@ -40,4 +40,4 @@ Palette::Palette(const ColorMap& colormap) : itsSize(0), itsPalette()
     }
   }
 }
-}
+}  // namespace Giza
