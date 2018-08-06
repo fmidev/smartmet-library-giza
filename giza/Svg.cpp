@@ -21,7 +21,7 @@
 
 cairo_status_t stream_to_buffer(void *closure, const unsigned char *data, unsigned int length)
 {
-  std::string *buffer = reinterpret_cast<std::string *>(closure);
+  auto *buffer = reinterpret_cast<std::string *>(closure);
   buffer->append(reinterpret_cast<const char *>(data), length);
   return CAIRO_STATUS_SUCCESS;
 }
@@ -38,7 +38,7 @@ std::string svg_to_pdf_or_ps(const std::string &svg, bool ispdf)
   cairo_t *cr = nullptr;
   RsvgHandle *handle = nullptr;
 
-  const guint8 *indata = reinterpret_cast<const guint8 *>(svg.c_str());
+  auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
 
   handle =
       rsvg_handle_new_from_data_with_flags(indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
