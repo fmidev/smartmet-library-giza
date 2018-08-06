@@ -57,7 +57,7 @@ std::string svg_to_pdf_or_ps(const std::string &svg, bool ispdf)
     image = cairo_ps_surface_create_for_stream(
         stream_to_buffer, &buffer, dimensions.width, dimensions.height);
     // we always produce eps only
-    cairo_ps_surface_set_eps(image, true);
+    cairo_ps_surface_set_eps(image, 1);
   }
 
   cr = cairo_create(image);
