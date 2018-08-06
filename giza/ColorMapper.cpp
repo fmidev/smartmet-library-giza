@@ -19,7 +19,7 @@ namespace Giza
 // Histogram data
 struct ColorInfo
 {
-  ColorInfo(Color c) : color(c), count(0), keeper(false) {}
+  explicit ColorInfo(Color c) : color(c), count(0), keeper(false) {}
   Color color;
   Count count;
   bool keeper;
