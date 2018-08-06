@@ -43,7 +43,7 @@ std::string svg_to_pdf_or_ps(const std::string &svg, bool ispdf)
   handle =
       rsvg_handle_new_from_data_with_flags(indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
 
-  if (!handle) throw std::runtime_error("Failed to get rsvg handle on the SVG data");
+  if (handle == nullptr) throw std::runtime_error("Failed to get rsvg handle on the SVG data");
 
   RsvgDimensionData dimensions;
   rsvg_handle_get_dimensions(handle, &dimensions);
@@ -108,7 +108,7 @@ std::string topng(const std::string &svg, const ColorMapOptions &options)
     handle = rsvg_handle_new_from_data_with_flags(
         indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
 
-    if (!handle) throw std::runtime_error("Failed to get rsvg handle on the SVG data");
+    if (handle == nullptr) throw std::runtime_error("Failed to get rsvg handle on the SVG data");
 
     RsvgDimensionData dimensions;
     rsvg_handle_get_dimensions(handle, &dimensions);
