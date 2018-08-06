@@ -340,7 +340,7 @@ double ColorTree::distance(Color color1, Color color2)
  */
 // ----------------------------------------------------------------------
 
-bool ColorTree::empty() const { return (leftcolor.get() == 0); }
+bool ColorTree::empty() const { return (leftcolor.get() == nullptr); }
 // ----------------------------------------------------------------------
 /*!
  * \brief Return number of colours in the tree.
@@ -375,10 +375,10 @@ void ColorTree::clear()
 
 void ColorTree::insert(Color color)
 {
-  if (leftcolor.get() == 0)
+  if (leftcolor.get() == nullptr)
     leftcolor.reset(new Color(color));
 
-  else if (rightcolor.get() == 0)
+  else if (rightcolor.get() == nullptr)
     rightcolor.reset(new Color(color));
 
   else
@@ -388,7 +388,7 @@ void ColorTree::insert(Color color)
 
     if (dist_left > dist_right)
     {
-      if (right.get() == 0) right.reset(new ColorTree);
+      if (right.get() == nullptr) right.reset(new ColorTree);
 
       // note that constructor sets maxright to be negative
 
@@ -399,7 +399,7 @@ void ColorTree::insert(Color color)
     }
     else
     {
-      if (left.get() == 0) left.reset(new ColorTree);
+      if (left.get() == nullptr) left.reset(new ColorTree);
 
       // note that constructor sets maxleft to be negative
 
@@ -484,17 +484,17 @@ bool ColorTree::nearest(Color color, Color& nearest, double& radius) const
 
   const bool left_closer = (left_dist < right_dist);
 
-  if (!left_closer && (right.get() != 0) && ((radius + maxright) >= right_dist))
+  if (!left_closer && (right.get() != nullptr) && ((radius + maxright) >= right_dist))
   {
     found |= right->nearest(color, nearest, radius);
   }
 
-  if ((left.get() != 0) && ((radius + maxleft) >= left_dist))
+  if ((left.get() != nullptr) && ((radius + maxleft) >= left_dist))
   {
     found |= left->nearest(color, nearest, radius);
   }
 
-  if (left_closer && (right.get() != 0) && ((radius + maxright) >= right_dist))
+  if (left_closer && (right.get() != nullptr) && ((radius + maxright) >= right_dist))
   {
     found |= right->nearest(color, nearest, radius);
   }
