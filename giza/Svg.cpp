@@ -103,7 +103,7 @@ std::string topng(const std::string &svg, const ColorMapOptions &options)
   {
     // BrainStorm::WriteLock lock(globalPngMutex);
 
-    const guint8 *indata = reinterpret_cast<const guint8 *>(svg.c_str());
+    auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
 
     handle = rsvg_handle_new_from_data_with_flags(
         indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
