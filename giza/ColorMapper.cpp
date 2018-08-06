@@ -104,8 +104,8 @@ Counter calc_histogram(cairo_surface_t *image)
   Color color0 = get_color(data, 0, 0, stride);
   counter.insert(Counter::value_type(color0, ColorInfo(color0)));
 
-  Counter::iterator last1 = counter.begin();
-  Counter::iterator last2 = counter.begin();
+  auto = counter.begin();
+  auto last2 = counter.begin();
 
   for (int j = 0; j < height; j++)
     for (int i = 0; i < width; i++)
