@@ -48,7 +48,7 @@ void unpremultiply_data(png_structp /* png */, png_row_infop row_info, png_bytep
 
 // Cairo callback for writing image chunks
 
-static void append_to_string(png_structp png, png_bytep data, png_size_t length)
+void append_to_string(png_structp png, png_bytep data, png_size_t length)
 {
   std::string *buffer = reinterpret_cast<std::string *>(png_get_io_ptr(png));
   buffer->append(reinterpret_cast<const char *>(data), length);
