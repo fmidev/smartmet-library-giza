@@ -50,7 +50,7 @@ void unpremultiply_data(png_structp /* png */, png_row_infop row_info, png_bytep
 
 void append_to_string(png_structp png, png_bytep data, png_size_t length)
 {
-  std::string *buffer = reinterpret_cast<std::string *>(png_get_io_ptr(png));
+  auto *buffer = reinterpret_cast<std::string *>(png_get_io_ptr(png));
   buffer->append(reinterpret_cast<const char *>(data), length);
 }
 
@@ -224,7 +224,7 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
     for (int i = 0; i < height; i++)
     {
       // Convert cairo ARGB row to array of palette indices
-      png_byte *row = static_cast<png_byte *>(data + i * stride);
+      auto *row = static_cast<png_byte *>(data + i * stride);
       for (int j = 0; j < width; j++)
       {
         Color c = *reinterpret_cast<Color *>(row);
