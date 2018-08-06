@@ -104,7 +104,7 @@ Counter calc_histogram(cairo_surface_t *image)
   Color color0 = get_color(data, 0, 0, stride);
   counter.insert(Counter::value_type(color0, ColorInfo(color0)));
 
-  auto = counter.begin();
+  auto last1 = counter.begin();
   auto last2 = counter.begin();
 
   for (int j = 0; j < height; j++)
@@ -236,7 +236,7 @@ void build_tree(cairo_surface_t *image,
     else
     {
       Color nearest = colortree.nearest(info.color);
-      double dist = colortree.distance(nearest, info.color);
+      double dist = ColorTree::distance(nearest, info.color);
 
       double limit = factor * log(ratio * info.count);
 
@@ -288,7 +288,7 @@ void build_tree(cairo_surface_t *image,
       else
       {
         Color nearest = colortree.nearest(info.color);
-        double dist = colortree.distance(nearest, info.color);
+        double dist = ColorTree::distance(nearest, info.color);
 
         const double limit = factor * log(ratio * info.count);
         if (dist < limit)
