@@ -1,5 +1,7 @@
 #include "ColorTree.h"
+#include <boost/move/make_unique.hpp>
 #include <cassert>
+#include <cmath>
 
 /*
  * double gamma = 2.2f;
@@ -353,8 +355,8 @@ int ColorTree::size() const { return treesize; }
 
 void ColorTree::clear()
 {
-  right.reset(new ColorTree);
-  left.reset(new ColorTree);
+  right = boost::movelib::make_unique<ColorTree>();
+  left = boost::movelib::make_unique<ColorTree>();
   treesize = 0;
 }
 
@@ -373,10 +375,10 @@ void ColorTree::clear()
 void ColorTree::insert(Color color)
 {
   if (leftcolor == nullptr)
-    leftcolor.reset(new Color(color));
+    leftcolor = boost::movelib::make_unique<Color>(color);
 
   else if (rightcolor == nullptr)
-    rightcolor.reset(new Color(color));
+    rightcolor = boost::movelib::make_unique<Color>(color);
 
   else
   {
@@ -385,7 +387,7 @@ void ColorTree::insert(Color color)
 
     if (dist_left > dist_right)
     {
-      if (right == nullptr) right.reset(new ColorTree);
+      if (right == nullptr) right = boost::movelib::make_unique<ColorTree>();
 
       // note that constructor sets maxright to be negative
 
@@ -396,7 +398,7 @@ void ColorTree::insert(Color color)
     }
     else
     {
-      if (left == nullptr) left.reset(new ColorTree);
+      if (left == nullptr) left = boost::movelib::make_unique<ColorTree>();
 
       // note that constructor sets maxleft to be negative
 

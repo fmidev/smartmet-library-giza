@@ -388,7 +388,8 @@ const ColorMap &ColorMapper::colormap() const { return itsColorMap; }
 
 Histogram ColorMapper::histogram(cairo_surface_t *image) const
 {
-  if (!image) throw std::runtime_error("Cannot calculate colour histogram for a null pointer");
+  if (image == nullptr)
+    throw std::runtime_error("Cannot calculate colour histogram for a null pointer");
 
   Counter counter = calc_histogram(image);
 

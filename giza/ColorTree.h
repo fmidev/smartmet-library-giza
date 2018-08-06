@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ColorTypes.h"
-#include <boost/shared_ptr.hpp>
+#include <boost/move/unique_ptr.hpp>
 
 // ----------------------------------------------------------------------
 /*!
@@ -36,9 +36,9 @@ class ColorTree
   double maxleft;
   double maxright;
   int treesize;
-  std::shared_ptr<Color> leftcolor;
-  std::shared_ptr<Color> rightcolor;
-  std::shared_ptr<ColorTree> left;
-  std::shared_ptr<ColorTree> right;
+  boost::movelib::unique_ptr<Color> leftcolor;
+  boost::movelib::unique_ptr<Color> rightcolor;
+  boost::movelib::unique_ptr<ColorTree> left;
+  boost::movelib::unique_ptr<ColorTree> right;
 };
-}
+}  // namespace Giza
