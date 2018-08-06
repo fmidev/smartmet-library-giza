@@ -75,7 +75,8 @@ Counter calc_histogram(cairo_surface_t *image)
 {
   // Verify data is ok to process
 
-  if (!image) throw std::runtime_error("Cannot calculate colour histogram for a null pointer");
+  if (image == nullptr)
+    throw std::runtime_error("Cannot calculate colour histogram for a null pointer");
 
   auto format = cairo_image_surface_get_format(image);
   if (format != CAIRO_FORMAT_ARGB32)
@@ -157,7 +158,8 @@ void replace_colors(cairo_surface_t *image, const Giza::ColorMap &inputmap)
 {
   // Verify data is ok to process
 
-  if (!image) throw std::runtime_error("Cannot calculate colour histogram for a null pointer");
+  if (image == nullptr)
+    throw std::runtime_error("Cannot calculate colour histogram for a null pointer");
 
   auto format = cairo_image_surface_get_format(image);
   if (format != CAIRO_FORMAT_ARGB32)
