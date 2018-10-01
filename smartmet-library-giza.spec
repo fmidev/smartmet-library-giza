@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 18.8.6
+Version: 18.10.1
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -58,6 +58,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Mon Oct  1 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.10.1-1.fmi
+- Added option -g to get proper debuginfo packages
+
 * Mon Aug  6 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.8.6-1.fmi
 - Silenced CodeChecker warnings
 
