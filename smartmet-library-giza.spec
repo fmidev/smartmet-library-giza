@@ -23,7 +23,7 @@ Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: boost-devel
 #TestRequires: gcc-c++
-#TestRequires: smartmet-regression
+#TestRequires: smartmet-library-regression
 
 %description
 FMI Extensions to Cairo Graphics
