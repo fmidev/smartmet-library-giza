@@ -29,6 +29,9 @@ void defaults()
   Giza::ColorMapper mapper;
   mapper.reduce(image);
   auto status = cairo_surface_write_to_png(image, testfile.c_str());
+
+  cairo_surface_destroy(image);
+
   if (status != CAIRO_STATUS_SUCCESS)
     TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
@@ -59,6 +62,9 @@ void quality()
     mapper.reduce(image);
 
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
+
+    cairo_surface_destroy(image);
+
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
@@ -83,6 +89,9 @@ void quality()
 
     mapper.reduce(image);
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
+
+    cairo_surface_destroy(image);
+
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
@@ -115,6 +124,9 @@ void maxcolors()
     mapper.reduce(image);
 
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
+
+    cairo_surface_destroy(image);
+
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
@@ -139,6 +151,9 @@ void maxcolors()
 
     mapper.reduce(image);
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
+
+    cairo_surface_destroy(image);
+
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
@@ -163,6 +178,8 @@ void maxcolors()
 
     mapper.reduce(image);
     auto status = cairo_surface_write_to_png(image, testfile.c_str());
+    cairo_surface_destroy(image);
+
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
@@ -187,6 +204,9 @@ void transparency()
   mapper.reduce(image);
 
   auto status = cairo_surface_write_to_png(image, testfile.c_str());
+
+  cairo_surface_destroy(image);
+
   if (status != CAIRO_STATUS_SUCCESS)
     TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
