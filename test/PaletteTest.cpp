@@ -29,6 +29,8 @@ void palette()
   const auto& colormap = mapper.colormap();
   Giza::Palette palette(colormap);
 
+  cairo_surface_destroy(image);
+
   if (palette.size() != 135) TEST_FAILED("Expected to built a palette of size 135");
 
 #if 0
