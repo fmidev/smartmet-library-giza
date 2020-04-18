@@ -13,13 +13,19 @@ DIFFICULTFLAGS = -Weffc++ -Wunreachable-code -Wredundant-decls
 CC = g++
 CFLAGS = -DUNIX -O0 -g $(MAINFLAGS) -Wno-write-strings
 
-INCLUDES = \
-	-I ../giza \
+# Boost 1.69                                                                                                                                                   
+
+ifneq "$(wildcard /usr/include/boost169)" ""                                                                                                                   
+  INCLUDES += -I/usr/include/boost169
+  LIBS += -L/usr/lib64/boost169
+endif  
+
+INCLUDES += -I ../giza \
 	-I /usr/include/smartmet \
 	$$(pkg-config --cflags librsvg-2.0) \
 	$$(pkg-config --cflags cairo)
 
-LIBS = 	$$(pkg-config --libs librsvg-2.0) \
+LIBS += $$(pkg-config --libs librsvg-2.0) \
 	$$(pkg-config --libs cairo) \
 	../libsmartmet-giza.so \
 	-lboost_filesystem \

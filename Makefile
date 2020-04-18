@@ -28,6 +28,13 @@ objdir = obj
 
 DEFINES = -DUNIX -D_REENTRANT
 
+# Boost 1.69                                                                                                                                                   
+
+ifneq "$(wildcard /usr/include/boost169)" ""                                                                                                                   
+  INCLUDES += -I/usr/include/boost169
+  LIBS += -L/usr/lib64/boost169
+endif  
+
 ifeq ($(CXX), clang++)
 
  FLAGS = \
@@ -38,7 +45,7 @@ ifeq ($(CXX), clang++)
 	-Wno-padded \
 	-Wno-missing-prototypes
 
- INCLUDES = \
+ INCLUDES += \
 	-isystem $(includedir) \
 	-isystem $(includedir)/smartmet \
 	$$(pkg-config --cflags librsvg-2.0) \
@@ -60,7 +67,7 @@ else
 
  FLAGS_RELEASE = -Wuninitialized
 
- INCLUDES = \
+ INCLUDES += \
 	-I$(includedir) \
 	-I$(includedir)/smartmet \
 	$$(pkg-config --cflags librsvg-2.0) \
@@ -73,7 +80,7 @@ CFLAGS         = $(DEFINES) $(FLAGS) $(FLAGS_RELEASE) -DNDEBUG -O2 -g
 CFLAGS_DEBUG   = $(DEFINES) $(FLAGS) $(FLAGS_DEBUG)   -Werror  -Og -g
 CFLAGS_PROFILE = $(DEFINES) $(FLAGS) $(FLAGS_PROFILE) -DNDEBUG -O2 -g -pg
 
-LIBS = -L$(libdir) \
+LIBS += -L$(libdir) \
 	$$(pkg-config --libs librsvg-2.0) \
 	$$(pkg-config --libs cairo)
 
