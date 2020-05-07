@@ -21,7 +21,7 @@ Requires: librsvg2 = 2.40.6
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
-#TestRequires: boost-devel
+#TestRequires: boost169-devel
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
 
