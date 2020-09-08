@@ -14,10 +14,15 @@ BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: boost169-devel
+%if 0%{rhel} >= 8
+BuildRequires: librsvg2-devel >= 2.42
+Requires: librsvg2 >= 2.42
+%else
 BuildRequires: librsvg2-devel = 2.40.6
+Requires: librsvg2 = 2.40.6
+%endif
 BuildRequires: cairo-devel
 Requires: cairo
-Requires: librsvg2 = 2.40.6
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
@@ -50,7 +55,11 @@ rm -rf $RPM_BUILD_ROOT
 Summary: Giza development files
 Provides: %{SPECNAME}-devel
 Requires: %{SPECNAME}
-Requires: librsvg2-devel = 2.40.6
+%if 0%{rhel} >= 8
+BuildRequires: librsvg2-devel >= 2.42
+%else
+BuildRequires: librsvg2-devel = 2.40.6
+%endif
 Obsoletes: libsmartmet-giza-devel < 16.12.21
 
 %description -n %{SPECNAME}-devel

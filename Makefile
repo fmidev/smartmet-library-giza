@@ -28,9 +28,13 @@ objdir = obj
 
 DEFINES = -DUNIX -D_REENTRANT
 
-# Boost 1.69                                                                                                                                                   
+# RHEL version dependent define
 
-ifneq "$(wildcard /usr/include/boost169)" ""                                                                                                                   
+$(eval $(shell grep VERSION_ID /etc/os-release | sed -e 's/\.[0-9]*//g'))
+DEFINES += -DVERSION_ID=$(VERSION_ID)
+
+# Boost 1.69
+ifneq "$(wildcard /usr/include/boost169)" ""
   INCLUDES += -I/usr/include/boost169
   LIBS += -L/usr/lib64/boost169
 endif  

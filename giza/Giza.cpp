@@ -6,6 +6,7 @@
 #include <set>
 #include <stdexcept>
 #include <vector>
+#include <cstring>
 
 namespace Giza
 {
