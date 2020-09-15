@@ -3,27 +3,7 @@ LIB = smartmet-$(SUBNAME)
 SPEC = smartmet-library-$(SUBNAME)
 INCDIR = smartmet/$(SUBNAME)
 
-# Installation directories
-
-processor := $(shell uname -p)
-
-ifeq ($(origin PREFIX), undefined)
-  PREFIX = /usr
-else
-  PREFIX = $(PREFIX)
-endif
-
-ifeq ($(processor), x86_64)
-  libdir = $(PREFIX)/lib64
-else
-  libdir = $(PREFIX)/lib
-endif
-
-bindir = $(PREFIX)/bin
-includedir = $(PREFIX)/include
-datadir = $(PREFIX)/share
-objdir = obj
-
+include common.mk
 # Compiler options
 
 DEFINES = -DUNIX -D_REENTRANT
@@ -33,16 +13,10 @@ DEFINES = -DUNIX -D_REENTRANT
 $(eval $(shell grep VERSION_ID /etc/os-release | sed -e 's/\.[0-9]*//g'))
 DEFINES += -DVERSION_ID=$(VERSION_ID)
 
-# Boost 1.69
-ifneq "$(wildcard /usr/include/boost169)" ""
-  INCLUDES += -I/usr/include/boost169
-  LIBS += -L/usr/lib64/boost169
-endif  
-
-ifeq ($(CXX), clang++)
+ifeq ($(use_CLANG), yes)
 
  FLAGS = \
-	-std=c++11 -fPIC -MD -fno-omit-frame-pointer \
+	-std=$(CXX_STD) -fPIC -MD -fno-omit-frame-pointer \
 	-Weverything \
 	-Wno-c++98-compat \
 	-Wno-float-equal \
@@ -57,7 +31,7 @@ ifeq ($(CXX), clang++)
 
 else
 
- FLAGS = -std=c++11 -fPIC -MD -fno-omit-frame-pointer -Wall -W -Wno-unused-parameter -fdiagnostics-color=always -Wnon-virtual-dtor
+ FLAGS = -std=$(CXX_STD) -fPIC -MD -fno-omit-frame-pointer -Wall -W -Wno-unused-parameter -fdiagnostics-color=$(GCC_DIAG_COLOR) -Wnon-virtual-dtor
 
  FLAGS_DEBUG = \
 	-Wcast-align \
