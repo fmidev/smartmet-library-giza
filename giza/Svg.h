@@ -3,7 +3,7 @@
 
 namespace Giza
 {
-class ColorMapOptions;
+struct ColorMapOptions;
 
 namespace Svg
 {
