@@ -3,7 +3,9 @@ LIB = smartmet-$(SUBNAME)
 SPEC = smartmet-library-$(SUBNAME)
 INCDIR = smartmet/$(SUBNAME)
 
-include common.mk
+REQUIRES = librsvg cairo
+
+include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 # Compiler options
 
 DEFINES = -DUNIX -D_REENTRANT
@@ -13,73 +15,13 @@ DEFINES = -DUNIX -D_REENTRANT
 $(eval $(shell grep VERSION_ID /etc/os-release | sed -e 's/\.[0-9]*//g'))
 DEFINES += -DVERSION_ID=$(VERSION_ID)
 
-ifeq ($(use_CLANG), yes)
-
- FLAGS = \
-	-std=$(CXX_STD) -fPIC -MD -fno-omit-frame-pointer \
-	-Weverything \
-	-Wno-c++98-compat \
-	-Wno-float-equal \
-	-Wno-padded \
-	-Wno-missing-prototypes
-
- INCLUDES += \
-	-isystem $(includedir) \
-	-isystem $(includedir)/smartmet \
-	$$(pkg-config --cflags librsvg-2.0) \
-	$$(pkg-config --cflags cairo)
-
-else
-
- FLAGS = -std=$(CXX_STD) -fPIC -MD -fno-omit-frame-pointer -Wall -W -Wno-unused-parameter -fdiagnostics-color=$(GCC_DIAG_COLOR) -Wnon-virtual-dtor
-
- FLAGS_DEBUG = \
-	-Wcast-align \
-	-Wno-multichar \
-	-Wno-pmf-conversions \
-	-Woverloaded-virtual  \
-	-Wpointer-arith \
-	-Wredundant-decls \
-	-Wwrite-strings \
-	-Wsign-promo
-
- FLAGS_RELEASE = -Wuninitialized
-
- INCLUDES += \
-	-I$(includedir) \
-	-I$(includedir)/smartmet \
-	$$(pkg-config --cflags librsvg-2.0) \
-	$$(pkg-config --cflags cairo)
-endif
-
-# Compile options in detault, debug and profile modes
-
-CFLAGS         = $(DEFINES) $(FLAGS) $(FLAGS_RELEASE) -DNDEBUG -O2 -g
-CFLAGS_DEBUG   = $(DEFINES) $(FLAGS) $(FLAGS_DEBUG)   -Werror  -Og -g
-CFLAGS_PROFILE = $(DEFINES) $(FLAGS) $(FLAGS_PROFILE) -DNDEBUG -O2 -g -pg
-
 LIBS += -L$(libdir) \
-	$$(pkg-config --libs librsvg-2.0) \
-	$$(pkg-config --libs cairo)
+	$(LIBRSVG_LIBS) \
+	$(CAIRO_LIBS)
 
 # What to install
 
 LIBFILE = libsmartmet-$(SUBNAME).so
-
-# How to install
-
-INSTALL_PROG = install -m 775
-INSTALL_DATA = install -m 664
-
-# Compile option overrides
-
-ifneq (,$(findstring debug,$(MAKECMDGOALS)))
-  CFLAGS = $(CFLAGS_DEBUG)
-endif
-
-ifneq (,$(findstring profile,$(MAKECMDGOALS)))
-  CFLAGS = $(CFLAGS_PROFILE)
-endif
 
 # Compilation directories
 
