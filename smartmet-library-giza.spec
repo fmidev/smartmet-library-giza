@@ -14,9 +14,9 @@ BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: boost169-devel
+BuildRequires: smartmet-library-macgyver-devel >= 20.10.7
 %if 0%{rhel} >= 8
 BuildRequires: librsvg2-devel >= 2.42
-BuildRequires: smartmet-library-macgyver-devel >= 20.10.7
 Requires: librsvg2 >= 2.42
 %else
 BuildRequires: librsvg2-devel = 2.40.6
