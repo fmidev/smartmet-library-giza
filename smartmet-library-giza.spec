@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 20.4.18
+Version: 20.10.7
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -14,6 +14,7 @@ BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: boost169-devel
+BuildRequires: smartmet-library-macgyver-devel >= 20.10.7
 %if 0%{rhel} >= 8
 BuildRequires: librsvg2-devel >= 2.42
 Requires: librsvg2 >= 2.42
@@ -26,9 +27,18 @@ Requires: cairo
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
+#TestRequires: cairo-devel
 #TestRequires: boost169-devel
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
+#TestRequires: smartmet-library-macgyver-devel >= 20.10.7
+%if 0%{rhel} >= 8
+#TestRequires: librsvg2-devel >= 2.42
+#TestRequires: librsvg2 >= 2.42
+%else
+#TestRequires: librsvg2-devel = 2.40.6
+#TestRequires: librsvg2 = 2.40.6
+%endif
 
 %description
 FMI Extensions to Cairo Graphics
@@ -70,6 +80,10 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Wed Oct  7 2020 Andris Pavenis <andris.pavenis@fmi.fi> - 20.10.7-1.fmi
+- Use makefile.inc from smartmet-library-macgyver
+- Fail build in case of unresolved references from shared library
+
 * Sat Apr 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.18-1.fmi
 - Upgrade to Boost 1.69
 

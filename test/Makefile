@@ -1,32 +1,17 @@
 PROG = $(patsubst %.cpp,%,$(wildcard *Test.cpp))
 
-MAINFLAGS = -std=c++11 -Wall -W -Wno-unused-parameter
+REQUIRES := librsvg cairo
 
-EXTRAFLAGS = -Werror -pedantic -Wpointer-arith -Wcast-qual \
-	-Wcast-align -Wconversion -Winline \
-	-Wctor-dtor-privacy -Wnon-virtual-dtor -Wno-pmf-conversions \
-	-Wsign-promo -Wchar-subscripts -Wold-style-cast \
-	-Wshadow -Woverloaded-virtual
+include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
-DIFFICULTFLAGS = -Weffc++ -Wunreachable-code -Wredundant-decls
+MAINFLAGS = -std=$(CXX_STD) -Wall -W -Wno-unused-parameter
 
-CC = g++
 CFLAGS = -DUNIX -O0 -g $(MAINFLAGS) -Wno-write-strings
 
-# Boost 1.69                                                                                                                                                   
+INCLUDES += -I ../giza
 
-ifneq "$(wildcard /usr/include/boost169)" ""                                                                                                                   
-  INCLUDES += -I/usr/include/boost169
-  LIBS += -L/usr/lib64/boost169
-endif  
-
-INCLUDES += -I ../giza \
-	-I /usr/include/smartmet \
-	$$(pkg-config --cflags librsvg-2.0) \
-	$$(pkg-config --cflags cairo)
-
-LIBS += $$(pkg-config --libs librsvg-2.0) \
-	$$(pkg-config --libs cairo) \
+LIBS += $(LIBRSVG_LIBS) \
+	$(CAIRO_LIBS) \
 	../libsmartmet-giza.so \
 	-lboost_filesystem \
 	-lboost_system
@@ -45,4 +30,4 @@ test: $(PROG)
 		for i in *.err ; do echo `basename $$i .err`; done ; rm -f *.err ; false ) 
 
 $(PROG) : % : %.cpp ../libsmartmet-giza.so
-	$(CC) $(CFLAGS) -o $@ $@.cpp $(INCLUDES) $(LIBS)
+	$(CXX) $(CFLAGS) -o $@ $@.cpp $(INCLUDES) $(LIBS)
