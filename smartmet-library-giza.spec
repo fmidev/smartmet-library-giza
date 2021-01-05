@@ -32,6 +32,7 @@ Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
 #TestRequires: smartmet-library-macgyver-devel >= 20.10.7
+#TestRequires: ImageMagick
 %if 0%{rhel} >= 8
 #TestRequires: librsvg2-devel >= 2.42
 #TestRequires: librsvg2 >= 2.42

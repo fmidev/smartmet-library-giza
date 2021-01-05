@@ -13,8 +13,10 @@ INCLUDES += -I ../giza
 LIBS += $(LIBRSVG_LIBS) \
 	$(CAIRO_LIBS) \
 	../libsmartmet-giza.so \
+	-lsmartmet-macgyver \
 	-lboost_filesystem \
-	-lboost_system
+	-lboost_system \
+	-lfmt
 
 all: $(PROG)
 clean:

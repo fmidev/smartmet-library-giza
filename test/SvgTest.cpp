@@ -1,15 +1,19 @@
 #include "Svg.h"
 #include <boost/filesystem.hpp>
-#include <boost/functional/hash.hpp>
+#include <fmt/format.h>
+#include <macgyver/StringConversion.h>
 #include <regression/tframe.h>
 #include <fstream>
 
 using namespace std;
 
+const double error_limit = 30.0;
+
 std::string readfile(const std::string& filename)
 {
   std::ifstream in(filename.c_str());
-  if (!in) throw std::runtime_error("Failed to open '" + filename + "' for reading");
+  if (!in)
+    throw std::runtime_error("Failed to open '" + filename + "' for reading");
   std::stringstream buffer;
   buffer << in.rdbuf();
   return buffer.str();
@@ -18,11 +22,23 @@ std::string readfile(const std::string& filename)
 void writefile(const std::string& filename, const std::string& data)
 {
   std::ofstream out(filename.c_str());
-  if (!out) throw std::runtime_error("Failed to open '" + filename + "' for writing");
+  if (!out)
+    throw std::runtime_error("Failed to open '" + filename + "' for writing");
   out << data;
 }
 
-std::size_t filehash(const std::string& filename) { return boost::hash_value(readfile(filename)); }
+double imagedifference(const std::string& file1, const std::string& file2)
+{
+  std::string tmpfile = "svgdiff.txt";
+  auto cmd = fmt::format("compare -metric PSNR {} {} /dev/null > {} 2>&1", file1, file2, tmpfile);
+  system(cmd.c_str());
+  auto ret = readfile(tmpfile);
+  boost::filesystem::remove(tmpfile);
+  if (ret == "inf")
+    return 0;
+  return Fmi::stod(ret);
+}
+
 namespace Tests
 {
 // ----------------------------------------------------------------------
@@ -35,9 +51,9 @@ void topng()
 
   std::string svg = readfile(infile);
   writefile(testfile, Giza::Svg::topng(svg));
-  if (filehash(testfile) != filehash(outfile))
-    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
-
+  auto diff = imagedifference(testfile, outfile);
+  if (diff > error_limit)
+    TEST_FAILED("Difference = " + Fmi::to_string(diff));
   boost::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -53,9 +69,9 @@ void topng_transparency()
 
   std::string svg = readfile(infile);
   writefile(testfile, Giza::Svg::topng(svg));
-  if (filehash(testfile) != filehash(outfile))
-    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
-
+  auto diff = imagedifference(testfile, outfile);
+  if (diff > error_limit)
+    TEST_FAILED("Difference = " + Fmi::to_string(diff));
   boost::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -72,8 +88,10 @@ void topng_transparent_symbols()
 
     std::string svg = readfile(infile);
     writefile(testfile, Giza::Svg::topng(svg));
-    if (filehash(testfile) != filehash(outfile))
-      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+    auto diff = imagedifference(testfile, outfile);
+    if (diff > error_limit)
+      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    boost::filesystem::remove(testfile);
 
     boost::filesystem::remove(testfile);
   }
@@ -85,9 +103,9 @@ void topng_transparent_symbols()
 
     std::string svg = readfile(infile);
     writefile(testfile, Giza::Svg::topng(svg));
-    if (filehash(testfile) != filehash(outfile))
-      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
-
+    auto diff = imagedifference(testfile, outfile);
+    if (diff > error_limit)
+      TEST_FAILED("Difference = " + Fmi::to_string(diff));
     boost::filesystem::remove(testfile);
   }
 
@@ -98,9 +116,9 @@ void topng_transparent_symbols()
 
     std::string svg = readfile(infile);
     writefile(testfile, Giza::Svg::topng(svg));
-    if (filehash(testfile) != filehash(outfile))
-      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
-
+    auto diff = imagedifference(testfile, outfile);
+    if (diff > error_limit)
+      TEST_FAILED("Difference = " + Fmi::to_string(diff));
     boost::filesystem::remove(testfile);
   }
 
@@ -116,10 +134,10 @@ void topdf()
   std::string testfile = "failures/pdf_svg1.pdf";
 
   std::string svg = readfile(infile);
-  writefile(testfile, Giza::Svg::topdf(svg));
-  if (filehash(testfile) != filehash(outfile))
-    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
-
+  writefile(testfile, Giza::Svg::topng(svg));
+  auto diff = imagedifference(testfile, outfile);
+  if (diff > error_limit)
+    TEST_FAILED("Difference = " + Fmi::to_string(diff));
   boost::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -134,10 +152,10 @@ void tops()
   std::string testfile = "failures/ps_svg1.ps";
 
   std::string svg = readfile(infile);
-  writefile(testfile, Giza::Svg::tops(svg));
-  if (filehash(testfile) != filehash(outfile))
-    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
-
+  writefile(testfile, Giza::Svg::topng(svg));
+  auto diff = imagedifference(testfile, outfile);
+  if (diff > error_limit)
+    TEST_FAILED("Difference = " + Fmi::to_string(diff));
   boost::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -152,8 +170,8 @@ class tests : public tframe::tests
   void test()
   {
     TEST(topng);
-    // 2019-03-22: Disable topdf testing for now as result pdf is always different(perhaps integrated timestamp in binary?)
-    // TEST(topdf);
+    // 2019-03-22: Disable topdf testing for now as result pdf is always different(perhaps
+    // integrated timestamp in binary?) TEST(topdf);
     TEST(topng_transparency);
     TEST(topng_transparent_symbols);
     // TEST(tops);	// CreationDate changes every time!
