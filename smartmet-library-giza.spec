@@ -27,7 +27,7 @@ Requires: cairo
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
-#TestRequires: fmt
+#TestRequires: fmt-devel
 #TestRequires: cairo-devel
 #TestRequires: boost169-devel
 #TestRequires: gcc-c++
