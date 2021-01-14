@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 20.10.7
+Version: 21.1.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -14,10 +14,10 @@ BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: boost169-devel
-BuildRequires: smartmet-library-macgyver-devel >= 20.10.7
+BuildRequires: smartmet-library-macgyver-devel >= 21.1.14
 %if 0%{rhel} >= 8
-BuildRequires: librsvg2-devel >= 2.42
-Requires: librsvg2 >= 2.42
+BuildRequires: librsvg2-devel >= 2.40.6
+Requires: librsvg2 >= 2.40.6
 %else
 BuildRequires: librsvg2-devel = 2.40.6
 Requires: librsvg2 = 2.40.6
@@ -32,11 +32,11 @@ Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: boost169-devel
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
-#TestRequires: smartmet-library-macgyver-devel >= 20.10.7
+#TestRequires: smartmet-library-macgyver-devel >= 21.1.14
 #TestRequires: ImageMagick
 %if 0%{rhel} >= 8
-#TestRequires: librsvg2-devel >= 2.42
-#TestRequires: librsvg2 >= 2.42
+#TestRequires: librsvg2-devel >= 2.40.6
+#TestRequires: librsvg2 >= 2.40.6
 %else
 #TestRequires: librsvg2-devel = 2.40.6
 #TestRequires: librsvg2 = 2.40.6
@@ -68,7 +68,7 @@ Summary: Giza development files
 Provides: %{SPECNAME}-devel
 Requires: %{SPECNAME}
 %if 0%{rhel} >= 8
-BuildRequires: librsvg2-devel >= 2.42
+BuildRequires: librsvg2-devel >= 2.40.6
 %else
 BuildRequires: librsvg2-devel = 2.40.6
 %endif
@@ -82,6 +82,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Thu Jan 14 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.14-1.fmi
+- Repackaged smartmet to resolve debuginfo issues
+
 * Wed Oct  7 2020 Andris Pavenis <andris.pavenis@fmi.fi> - 20.10.7-1.fmi
 - Use makefile.inc from smartmet-library-macgyver
 - Fail build in case of unresolved references from shared library
