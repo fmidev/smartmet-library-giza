@@ -4,19 +4,14 @@ REQUIRES := librsvg cairo
 
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
-MAINFLAGS = -std=$(CXX_STD) -Wall -W -Wno-unused-parameter
-
-CFLAGS = -DUNIX -O0 -g $(MAINFLAGS) -Wno-write-strings
-
 INCLUDES += -I ../giza
 
-LIBS += $(LIBRSVG_LIBS) \
-	$(CAIRO_LIBS) \
-	../libsmartmet-giza.so \
+LIBS += ../libsmartmet-giza.so \
 	-lsmartmet-macgyver \
 	-lboost_filesystem \
 	-lboost_system \
-	-lfmt
+	-lfmt \
+	$(REQUIRED_LIBS)
 
 all: $(PROG)
 clean:
