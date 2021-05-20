@@ -1,12 +1,12 @@
 #include "Giza.h"
 #include "ColorMapper.h"
 #include <cairo/cairo.h>
+#include <cstring>
 #include <map>
 #include <png.h>
 #include <set>
 #include <stdexcept>
 #include <vector>
-#include <cstring>
 
 namespace Giza
 {
@@ -16,7 +16,8 @@ namespace
 
 png_byte unpremultiply_color_component(png_byte component, png_byte alpha)
 {
-  if (alpha == 0) return 0;
+  if (alpha == 0)
+    return 0;
   return (component * 255 + alpha / 2) / alpha;
 }
 
@@ -68,7 +69,8 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
   // Access image data directly.
   unsigned char *data = cairo_image_surface_get_data(image);
 
-  if (data == nullptr) throw std::runtime_error("Attempt to render an invalid Cairo image as PNG");
+  if (data == nullptr)
+    throw std::runtime_error("Attempt to render an invalid Cairo image as PNG");
 
   // The cairo image data may have a stride width, meaning once you have
   // passed a certain width you may have to skip more bytes to reach the next
@@ -191,7 +193,8 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
 
       ++num_colors;
 
-      if (a < 255) num_transparent = num_colors;
+      if (a < 255)
+        num_transparent = num_colors;
     }
 
     // Setup the libpng storing method
@@ -210,7 +213,8 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
     // png_set_benign_errors(png,1);
 
     // Set transparencies, if there are any
-    if (num_transparent > 0) png_set_tRNS(png, info, transparent_values, num_transparent, nullptr);
+    if (num_transparent > 0)
+      png_set_tRNS(png, info, transparent_values, num_transparent, nullptr);
 
     // Set the opaque RGB palette
     png_set_PLTE(png, info, color_values, num_colors);

@@ -9,7 +9,8 @@ using namespace std;
 std::size_t filehash(const std::string& filename)
 {
   std::ifstream in(filename.c_str());
-  if (!in) throw std::runtime_error(std::string("Failed to open '") + filename + "' for reading");
+  if (!in)
+    throw std::runtime_error(std::string("Failed to open '") + filename + "' for reading");
   std::stringstream buffer;
   buffer << in.rdbuf();
   return boost::hash_value(buffer.str());

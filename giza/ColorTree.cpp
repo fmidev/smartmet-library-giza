@@ -339,14 +339,20 @@ double ColorTree::distance(Color color1, Color color2)
  */
 // ----------------------------------------------------------------------
 
-bool ColorTree::empty() const { return (leftcolor == nullptr); }
+bool ColorTree::empty() const
+{
+  return (leftcolor == nullptr);
+}
 // ----------------------------------------------------------------------
 /*!
  * \brief Return number of colours in the tree.
  */
 // ----------------------------------------------------------------------
 
-int ColorTree::size() const { return treesize; }
+int ColorTree::size() const
+{
+  return treesize;
+}
 // ----------------------------------------------------------------------
 /*!
  * \brief Clear the tree of all colours
@@ -387,7 +393,8 @@ void ColorTree::insert(Color color)
 
     if (dist_left > dist_right)
     {
-      if (right == nullptr) right = boost::movelib::make_unique<ColorTree>();
+      if (right == nullptr)
+        right = boost::movelib::make_unique<ColorTree>();
 
       // note that constructor sets maxright to be negative
 
@@ -398,7 +405,8 @@ void ColorTree::insert(Color color)
     }
     else
     {
-      if (left == nullptr) left = boost::movelib::make_unique<ColorTree>();
+      if (left == nullptr)
+        left = boost::movelib::make_unique<ColorTree>();
 
       // note that constructor sets maxleft to be negative
 
@@ -470,7 +478,8 @@ bool ColorTree::nearest(Color color, Color& nearest, double& radius) const
   // if radius is negative at this point, the tree is empty
   // on the other hand, if the radius is zero, we found a match
 
-  if (radius <= 0) return found;
+  if (radius <= 0)
+    return found;
 
   // Now we test to see if the branches below might hold an object
   // nearer than the best so far found. The triangle rule is used

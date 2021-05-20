@@ -96,7 +96,8 @@ Counter calc_histogram(cairo_surface_t *image)
 
   // Not sure if this is even valid in Cairo, check anyway
 
-  if (width * height == 0) return counter;
+  if (width * height == 0)
+    return counter;
 
   // Insert the first color so that we can initialize the iterator cache
   // Note that we insert count 0, but the first loop will fix the number
@@ -314,7 +315,8 @@ void build_tree(cairo_surface_t *image,
 
 bool colorcmp(const ColorInfo &info1, const ColorInfo &info2)
 {
-  if (info1.keeper == info2.keeper) return (info2.count < info1.count);
+  if (info1.keeper == info2.keeper)
+    return (info2.count < info1.count);
   return info1.keeper;
 }
 
@@ -367,7 +369,10 @@ void ColorMapper::options(const ColorMapOptions &theOptions)
  */
 // ----------------------------------------------------------------------
 
-bool ColorMapper::trueColor() const { return itsOptions.truecolor; }
+bool ColorMapper::trueColor() const
+{
+  return itsOptions.truecolor;
+}
 
 // ----------------------------------------------------------------------
 /*!
@@ -375,7 +380,10 @@ bool ColorMapper::trueColor() const { return itsOptions.truecolor; }
  */
 // ----------------------------------------------------------------------
 
-const ColorMap &ColorMapper::colormap() const { return itsColorMap; }
+const ColorMap &ColorMapper::colormap() const
+{
+  return itsColorMap;
+}
 
 // ----------------------------------------------------------------------
 /*!
@@ -458,7 +466,8 @@ Histogram ColorMapper::histogram(cairo_surface_t *image) const
 void ColorMapper::reduce(cairo_surface_t *image)
 {
   // Skip histogram etc if true color is forced
-  if (itsOptions.truecolor) return;
+  if (itsOptions.truecolor)
+    return;
 
   // Calculate the histogram
 

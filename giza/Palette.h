@@ -14,6 +14,7 @@ class Palette
   std::size_t size() const { return itsSize; }
   std::size_t index(Color color) const { return itsIndexes.at(color); }
   Color color(std::size_t index) const { return itsPalette.at(index); }
+
  private:
   std::size_t itsSize;
   std::vector<Color> itsPalette;

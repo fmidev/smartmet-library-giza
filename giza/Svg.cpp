@@ -44,11 +44,11 @@ std::string svg_to_pdf_or_ps(const std::string &svg, bool ispdf)
   handle =
       rsvg_handle_new_from_data_with_flags(indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
 #else
-  handle =
-      rsvg_handle_new_from_data(indata, svg.size(), nullptr);
-#endif  
+  handle = rsvg_handle_new_from_data(indata, svg.size(), nullptr);
+#endif
 
-  if (handle == nullptr) throw std::runtime_error("Failed to get rsvg handle on the SVG data");
+  if (handle == nullptr)
+    throw std::runtime_error("Failed to get rsvg handle on the SVG data");
 
   RsvgDimensionData dimensions;
   rsvg_handle_get_dimensions(handle, &dimensions);
@@ -111,14 +111,14 @@ std::string topng(const std::string &svg, const ColorMapOptions &options)
     auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
 
 #if VERSION_ID < 8
-  handle =
-      rsvg_handle_new_from_data_with_flags(indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
+    handle = rsvg_handle_new_from_data_with_flags(
+        indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
 #else
-  handle =
-      rsvg_handle_new_from_data(indata, svg.size(), nullptr);
-#endif  
+    handle = rsvg_handle_new_from_data(indata, svg.size(), nullptr);
+#endif
 
-    if (handle == nullptr) throw std::runtime_error("Failed to get rsvg handle on the SVG data");
+    if (handle == nullptr)
+      throw std::runtime_error("Failed to get rsvg handle on the SVG data");
 
     RsvgDimensionData dimensions;
     rsvg_handle_get_dimensions(handle, &dimensions);
@@ -143,13 +143,19 @@ std::string topng(const std::string &svg, const ColorMapOptions &options)
  */
 // ----------------------------------------------------------------------
 
-std::string topdf(const std::string &svg) { return svg_to_pdf_or_ps(svg, true); }
+std::string topdf(const std::string &svg)
+{
+  return svg_to_pdf_or_ps(svg, true);
+}
 // ----------------------------------------------------------------------
 /*!
  * \brief Convert SVG to PS in memory
  */
 // ----------------------------------------------------------------------
 
-std::string tops(const std::string &svg) { return svg_to_pdf_or_ps(svg, false); }
+std::string tops(const std::string &svg)
+{
+  return svg_to_pdf_or_ps(svg, false);
+}
 }  // namespace Svg
 }  // namespace Giza
