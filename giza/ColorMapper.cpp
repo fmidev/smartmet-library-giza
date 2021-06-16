@@ -1,5 +1,6 @@
 #include "ColorMapper.h"
 #include "ColorTree.h"
+#include <macgyver/Exception.h>
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
 #include <cmath>
@@ -73,80 +74,87 @@ inline void set_color(unsigned char *data, int i, int j, int stride, Color color
 
 Counter calc_histogram(cairo_surface_t *image)
 {
-  // Verify data is ok to process
+  try
+  {
+    // Verify data is ok to process
 
-  if (image == nullptr)
-    throw std::runtime_error("Cannot calculate colour histogram for a null pointer");
+    if (image == nullptr)
+      throw Fmi::Exception(BCP, "Cannot calculate colour histogram for a null pointer");
 
-  auto format = cairo_image_surface_get_format(image);
-  if (format != CAIRO_FORMAT_ARGB32)
-    throw std::runtime_error("Color quantization is implemented only for ARGB32 images");
+    auto format = cairo_image_surface_get_format(image);
+    if (format != CAIRO_FORMAT_ARGB32)
+      throw Fmi::Exception(BCP, "Color quantization is implemented only for ARGB32 images");
 
-  // Shorthand variables
+    // Shorthand variables
 
-  int width = cairo_image_surface_get_width(image);
-  int height = cairo_image_surface_get_height(image);
-  int stride = cairo_image_surface_get_stride(image);  // bytes to next row
-  unsigned char *data = cairo_image_surface_get_data(image);
+    int width = cairo_image_surface_get_width(image);
+    int height = cairo_image_surface_get_height(image);
+    int stride = cairo_image_surface_get_stride(image);  // bytes to next row
+    unsigned char *data = cairo_image_surface_get_data(image);
 
-  // We assume there are going to be lots of colours, se we use
-  // a sensible starting bucket size
+    // We assume there are going to be lots of colours, se we use
+    // a sensible starting bucket size
 
-  Counter counter(4096);
+    Counter counter(4096);
 
-  // Not sure if this is even valid in Cairo, check anyway
+    // Not sure if this is even valid in Cairo, check anyway
 
-  if (width * height == 0)
-    return counter;
+    if (width * height == 0)
+      return counter;
 
-  // Insert the first color so that we can initialize the iterator cache
-  // Note that we insert count 0, but the first loop will fix the number
+    // Insert the first color so that we can initialize the iterator cache
+    // Note that we insert count 0, but the first loop will fix the number
 
-  Color color0 = get_color(data, 0, 0, stride);
-  counter.insert(Counter::value_type(color0, ColorInfo(color0)));
+    Color color0 = get_color(data, 0, 0, stride);
+    counter.insert(Counter::value_type(color0, ColorInfo(color0)));
 
-  auto last1 = counter.begin();
-  auto last2 = counter.begin();
+    auto last1 = counter.begin();
+    auto last2 = counter.begin();
 
-  for (int j = 0; j < height; j++)
-    for (int i = 0; i < width; i++)
-    {
-      Color color = get_color(data, i, j, stride);
-
-      if (last1->first == color)
+    for (int j = 0; j < height; j++)
+      for (int i = 0; i < width; i++)
       {
-        ++last1->second;
-        // test if the color is the same in a 3x3 box and is hence a new color to be kept
-        if (!last1->second.keeper && i > 1 && j > 1)
+        Color color = get_color(data, i, j, stride);
+
+        if (last1->first == color)
         {
-          // Note: image(i-1,j) is already known to have the same color (last1 points to it)
-          if (get_color(data, i - 2, j, stride) == color &&
-              get_color(data, i, j - 1, stride) == color &&
-              get_color(data, i - 1, j - 1, stride) == color &&
-              get_color(data, i - 2, j - 1, stride) == color &&
-              get_color(data, i, j - 2, stride) == color &&
-              get_color(data, i - 1, j - 2, stride) == color &&
-              get_color(data, i - 2, j - 2, stride) == color)
+          ++last1->second;
+          // test if the color is the same in a 3x3 box and is hence a new color to be kept
+          if (!last1->second.keeper && i > 1 && j > 1)
           {
-            last1->second.keep();
+            // Note: image(i-1,j) is already known to have the same color (last1 points to it)
+            if (get_color(data, i - 2, j, stride) == color &&
+                get_color(data, i, j - 1, stride) == color &&
+                get_color(data, i - 1, j - 1, stride) == color &&
+                get_color(data, i - 2, j - 1, stride) == color &&
+                get_color(data, i, j - 2, stride) == color &&
+                get_color(data, i - 1, j - 2, stride) == color &&
+                get_color(data, i - 2, j - 2, stride) == color)
+            {
+              last1->second.keep();
+            }
           }
         }
+        else if (last2->first == color)
+        {
+          ++last2->second;
+          swap(last1, last2);
+        }
+        else
+        {
+          auto result = counter.insert(Counter::value_type(color, ColorInfo(color)));
+          last2 = last1;
+          last1 = result.first;
+          ++last1->second;
+        }
       }
-      else if (last2->first == color)
-      {
-        ++last2->second;
-        swap(last1, last2);
-      }
-      else
-      {
-        auto result = counter.insert(Counter::value_type(color, ColorInfo(color)));
-        last2 = last1;
-        last1 = result.first;
-        ++last1->second;
-      }
-    }
 
-  return counter;
+    return counter;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -157,56 +165,65 @@ Counter calc_histogram(cairo_surface_t *image)
 
 void replace_colors(cairo_surface_t *image, const Giza::ColorMap &inputmap)
 {
-  // Verify data is ok to process
+  try
+  {
+    // Verify data is ok to process
 
-  if (image == nullptr)
-    throw std::runtime_error("Cannot calculate colour histogram for a null pointer");
+    if (image == nullptr)
+      throw Fmi::Exception(BCP, "Cannot calculate colour histogram for a null pointer");
 
-  auto format = cairo_image_surface_get_format(image);
-  if (format != CAIRO_FORMAT_ARGB32)
-    throw std::runtime_error("Color replacement is implemented only for ARGB32 images");
+    auto format = cairo_image_surface_get_format(image);
+    if (format != CAIRO_FORMAT_ARGB32)
+      throw Fmi::Exception(BCP, "Color replacement is implemented only for ARGB32 images");
 
-  // Shorthand variables
+    // Shorthand variables
 
-  int width = cairo_image_surface_get_width(image);
-  int height = cairo_image_surface_get_height(image);
-  int stride = cairo_image_surface_get_stride(image);  // bytes to next row
-  unsigned char *data = cairo_image_surface_get_data(image);
+    int width = cairo_image_surface_get_width(image);
+    int height = cairo_image_surface_get_height(image);
+    int stride = cairo_image_surface_get_stride(image);  // bytes to next row
+    unsigned char *data = cairo_image_surface_get_data(image);
 
-  // Speed of the conversion by using an unordered map
+    // Speed of the conversion by using an unordered map
 
-  std::unordered_map<Color, Color> colormap(256);
-  for (const auto &value : inputmap)
-    colormap[value.first] = value.second;
+    std::unordered_map<Color, Color> colormap(256);
+    for (const auto &value : inputmap)
+      colormap[value.first] = value.second;
 
-  // Remember last color conversions for extra speed
+    // Remember last color conversions for extra speed
 
-  Color last_color1 = 0;
-  Color last_choice1 = 0;
-  Color last_color2 = 0;
-  Color last_choice2 = 0;
+    Color last_color1 = 0;
+    Color last_choice1 = 0;
+    Color last_color2 = 0;
+    Color last_choice2 = 0;
 
-  for (int j = 0; j < height; j++)
-    for (int i = 0; i < width; i++)
+    for (int j = 0; j < height; j++)
     {
-      Color color = get_color(data, i, j, stride);
-      if (color == last_color1)
-        set_color(data, i, j, stride, last_choice1);
-      else if (color == last_color2)
+      for (int i = 0; i < width; i++)
       {
-        set_color(data, i, j, stride, last_choice2);
-        std::swap(last_color1, last_color2);
-        std::swap(last_choice1, last_choice2);
-      }
-      else
-      {
-        last_color2 = last_color1;
-        last_choice2 = last_choice1;
-        last_color1 = color;
-        last_choice1 = colormap[color];
-        set_color(data, i, j, stride, last_choice1);
+        Color color = get_color(data, i, j, stride);
+        if (color == last_color1)
+          set_color(data, i, j, stride, last_choice1);
+        else if (color == last_color2)
+        {
+          set_color(data, i, j, stride, last_choice2);
+          std::swap(last_color1, last_color2);
+          std::swap(last_choice1, last_choice2);
+        }
+        else
+        {
+          last_color2 = last_color1;
+          last_choice2 = last_choice1;
+          last_color1 = color;
+          last_choice1 = colormap[color];
+          set_color(data, i, j, stride, last_choice1);
+        }
       }
     }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -221,36 +238,43 @@ void build_tree(cairo_surface_t *image,
                 ColorMap &colormap,
                 double quality)
 {
-  int width = cairo_image_surface_get_width(image);
-  int height = cairo_image_surface_get_height(image);
-
-  const double ratio = 1.0 / (width * height);
-  const double factor = -quality / log(10.0);
-
-  for (const auto &info : hist)
+  try
   {
-    if (colortree.empty() || info.keeper)
-    {
-      colortree.insert(info.color);
-      colormap[info.color] = info.color;
-    }
-    else
-    {
-      Color nearest = colortree.nearest(info.color);
-      double dist = ColorTree::distance(nearest, info.color);
+    int width = cairo_image_surface_get_width(image);
+    int height = cairo_image_surface_get_height(image);
 
-      double limit = factor * log(ratio * info.count);
+    const double ratio = 1.0 / (width * height);
+    const double factor = -quality / log(10.0);
 
-      if (dist < limit)
-      {
-        colormap[info.color] = nearest;
-      }
-      else
+    for (const auto &info : hist)
+    {
+      if (colortree.empty() || info.keeper)
       {
         colortree.insert(info.color);
         colormap[info.color] = info.color;
       }
+      else
+      {
+        Color nearest = colortree.nearest(info.color);
+        double dist = ColorTree::distance(nearest, info.color);
+
+        double limit = factor * log(ratio * info.count);
+
+        if (dist < limit)
+        {
+          colormap[info.color] = nearest;
+        }
+        else
+        {
+          colortree.insert(info.color);
+          colormap[info.color] = info.color;
+        }
+      }
     }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -268,56 +292,72 @@ void build_tree(cairo_surface_t *image,
                 int maxcolors,
                 double errorfactor)
 {
-  int width = cairo_image_surface_get_width(image);
-  int height = cairo_image_surface_get_height(image);
-
-  const double ratio = 1.0 / (width * height);
-
-  bool done = false;
-  while (!done)
+  try
   {
-    done = true;
-    const double factor = -quality / log(10.0);
+    int width = cairo_image_surface_get_width(image);
+    int height = cairo_image_surface_get_height(image);
 
-    for (const auto &info : hist)
+    const double ratio = 1.0 / (width * height);
+
+    bool done = false;
+    while (!done)
     {
-      if (colortree.empty() || info.keeper)
-      {
-        colortree.insert(info.color);
-        colormap[info.color] = info.color;
-      }
-      else
-      {
-        Color nearest = colortree.nearest(info.color);
-        double dist = ColorTree::distance(nearest, info.color);
+      done = true;
+      const double factor = -quality / log(10.0);
 
-        const double limit = factor * log(ratio * info.count);
-        if (dist < limit)
-          colormap[info.color] = nearest;
-        else if (colortree.size() < maxcolors)
+      for (const auto &info : hist)
+      {
+        if (colortree.empty() || info.keeper)
         {
           colortree.insert(info.color);
           colormap[info.color] = info.color;
         }
         else
         {
-          colortree.clear();
-          colormap.clear();
-          done = false;
-          quality *= errorfactor;
-          break;
+          Color nearest = colortree.nearest(info.color);
+          double dist = ColorTree::distance(nearest, info.color);
+
+          const double limit = factor * log(ratio * info.count);
+          if (dist < limit)
+            colormap[info.color] = nearest;
+          else if (colortree.size() < maxcolors)
+          {
+            colortree.insert(info.color);
+            colormap[info.color] = info.color;
+          }
+          else
+          {
+            colortree.clear();
+            colormap.clear();
+            done = false;
+            quality *= errorfactor;
+            break;
+          }
         }
       }
     }
   }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
 
-}  // namespace anonymous
+
 
 bool colorcmp(const ColorInfo &info1, const ColorInfo &info2)
 {
-  if (info1.keeper == info2.keeper)
-    return (info2.count < info1.count);
-  return info1.keeper;
+  try
+  {
+    if (info1.keeper == info2.keeper)
+      return (info2.count < info1.count);
+
+    return info1.keeper;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -331,16 +371,23 @@ bool colorcmp(const ColorInfo &info1, const ColorInfo &info2)
 
 ColorHistogram colorhistogram(cairo_surface_t *image)
 {
-  Counter counter = calc_histogram(image);
+  try
+  {
+    Counter counter = calc_histogram(image);
 
-  ColorHistogram histogram;
+    ColorHistogram histogram;
 
-  for (const auto &count : counter)
-    histogram.push_back(count.second);
+    for (const auto &count : counter)
+      histogram.push_back(count.second);
 
-  std::sort(histogram.begin(), histogram.end(), &colorcmp);
+    std::sort(histogram.begin(), histogram.end(), &colorcmp);
 
-  return histogram;
+    return histogram;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -351,16 +398,23 @@ ColorHistogram colorhistogram(cairo_surface_t *image)
 
 void ColorMapper::options(const ColorMapOptions &theOptions)
 {
-  itsOptions = theOptions;
+  try
+  {
+    itsOptions = theOptions;
 
-  if (itsOptions.quality < 1)
-    throw std::runtime_error("Requested relative color map quality must be at least 1, value " +
-                             boost::lexical_cast<std::string>(itsOptions.quality) + " was given");
+    if (itsOptions.quality < 1)
+      throw Fmi::Exception(BCP, "Requested relative color map quality must be at least 1, value " +
+                               boost::lexical_cast<std::string>(itsOptions.quality) + " was given");
 
-  if (itsOptions.errorfactor < 1.1)
-    throw std::runtime_error("Image color quantization error factor must be at least 1.1, value " +
-                             boost::lexical_cast<std::string>(itsOptions.errorfactor) +
-                             " was given");
+    if (itsOptions.errorfactor < 1.1)
+      throw Fmi::Exception(BCP, "Image color quantization error factor must be at least 1.1, value " +
+                               boost::lexical_cast<std::string>(itsOptions.errorfactor) +
+                               " was given");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -371,7 +425,14 @@ void ColorMapper::options(const ColorMapOptions &theOptions)
 
 bool ColorMapper::trueColor() const
 {
-  return itsOptions.truecolor;
+  try
+  {
+    return itsOptions.truecolor;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -382,7 +443,14 @@ bool ColorMapper::trueColor() const
 
 const ColorMap &ColorMapper::colormap() const
 {
-  return itsColorMap;
+  try
+  {
+    return itsColorMap;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -396,17 +464,24 @@ const ColorMap &ColorMapper::colormap() const
 
 Histogram ColorMapper::histogram(cairo_surface_t *image) const
 {
-  if (image == nullptr)
-    throw std::runtime_error("Cannot calculate colour histogram for a null pointer");
+  try
+  {
+    if (image == nullptr)
+      throw Fmi::Exception(BCP, "Cannot calculate colour histogram for a null pointer");
 
-  Counter counter = calc_histogram(image);
+    Counter counter = calc_histogram(image);
 
-  Histogram h;
+    Histogram h;
 
-  for (auto &value : counter)
-    h.insert(Histogram::value_type(value.second.count, value.first));
+    for (auto &value : counter)
+      h.insert(Histogram::value_type(value.second.count, value.first));
 
-  return h;
+    return h;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -465,67 +540,75 @@ Histogram ColorMapper::histogram(cairo_surface_t *image) const
 
 void ColorMapper::reduce(cairo_surface_t *image)
 {
-  // Skip histogram etc if true color is forced
-  if (itsOptions.truecolor)
-    return;
-
-  // Calculate the histogram
-
-  ColorHistogram hist = colorhistogram(image);
-
-  // Abort if we should use RGBA:
-  // - there are many different alpha values
-  // - smallest alpha is below some limit
-
-  const int max_unique_alphas = 100;
-  const unsigned char max_min_alpha = 128;
-
-  unsigned char min_alpha = 255;
-  std::vector<int> alphas(256, 0);
-  for (const auto &c : hist)
+  try
   {
-    auto a = alpha(c.color);
-    alphas[a] = 1;
-    min_alpha = std::min(min_alpha, a);
-  }
-  int num_alphas = std::count(alphas.begin(), alphas.end(), 1);
+    // Skip histogram etc if true color is forced
+    if (itsOptions.truecolor)
+      return;
 
-  if (num_alphas > max_unique_alphas || (min_alpha < max_min_alpha))
-  {
-    if (hist.size() >= 256)
+    // Calculate the histogram
+
+    ColorHistogram hist = colorhistogram(image);
+
+    // Abort if we should use RGBA:
+    // - there are many different alpha values
+    // - smallest alpha is below some limit
+
+    const int max_unique_alphas = 100;
+    const unsigned char max_min_alpha = 128;
+
+    unsigned char min_alpha = 255;
+    std::vector<int> alphas(256, 0);
+    for (const auto &c : hist)
     {
-      itsOptions.truecolor = true;
+      auto a = alpha(c.color);
+      alphas[a] = 1;
+      min_alpha = std::min(min_alpha, a);
+    }
+    int num_alphas = std::count(alphas.begin(), alphas.end(), 1);
+
+    if (num_alphas > max_unique_alphas || (min_alpha < max_min_alpha))
+    {
+      if (hist.size() >= 256)
+      {
+        itsOptions.truecolor = true;
+        return;
+      }
+      // Now we want palette mode but no color reductions
+
+      itsOptions.truecolor = false;
+
+      // Identify mapping
+      itsColorMap.clear();
+      for (const auto &c : hist)
+        itsColorMap.insert(ColorMap::value_type(c.color, c.color));
+
       return;
     }
-    // Now we want palette mode but no color reductions
 
-    itsOptions.truecolor = false;
+    // Select the colors and perform the replacements. Subsequent operations
+    // will use the ColorMap to produce the palette.
 
-    // Identify mapping
+    ColorTree tree;
     itsColorMap.clear();
-    for (const auto &c : hist)
-      itsColorMap.insert(ColorMap::value_type(c.color, c.color));
-    return;
+
+    if (itsOptions.maxcolors <= 0)
+      build_tree(image, hist, tree, itsColorMap, itsOptions.quality);
+    else
+      build_tree(image,
+                 hist,
+                 tree,
+                 itsColorMap,
+                 itsOptions.quality,
+                 itsOptions.maxcolors,
+                 itsOptions.errorfactor);
+
+    replace_colors(image, itsColorMap);
   }
-
-  // Select the colors and perform the replacements. Subsequent operations
-  // will use the ColorMap to produce the palette.
-
-  ColorTree tree;
-  itsColorMap.clear();
-
-  if (itsOptions.maxcolors <= 0)
-    build_tree(image, hist, tree, itsColorMap, itsOptions.quality);
-  else
-    build_tree(image,
-               hist,
-               tree,
-               itsColorMap,
-               itsOptions.quality,
-               itsOptions.maxcolors,
-               itsOptions.errorfactor);
-
-  replace_colors(image, itsColorMap);
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 }  // namespace Giza
