@@ -16,6 +16,7 @@ $(eval $(shell grep VERSION_ID /etc/os-release | sed -e 's/\.[0-9]*//g'))
 DEFINES += -DVERSION_ID=$(VERSION_ID)
 
 LIBS += -L$(libdir) \
+ -lsmartmet-macgyver \
 	$(LIBRSVG_LIBS) \
 	$(CAIRO_LIBS)
 

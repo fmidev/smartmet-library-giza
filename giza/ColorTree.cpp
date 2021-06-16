@@ -1,4 +1,5 @@
 #include "ColorTree.h"
+#include <macgyver/Exception.h>
 #include <boost/move/make_unique.hpp>
 #include <cassert>
 #include <cmath>
@@ -361,9 +362,16 @@ int ColorTree::size() const
 
 void ColorTree::clear()
 {
-  right = boost::movelib::make_unique<ColorTree>();
-  left = boost::movelib::make_unique<ColorTree>();
-  treesize = 0;
+  try
+  {
+    right = boost::movelib::make_unique<ColorTree>();
+    left = boost::movelib::make_unique<ColorTree>();
+    treesize = 0;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -380,41 +388,48 @@ void ColorTree::clear()
 
 void ColorTree::insert(Color color)
 {
-  if (leftcolor == nullptr)
-    leftcolor = boost::movelib::make_unique<Color>(color);
-
-  else if (rightcolor == nullptr)
-    rightcolor = boost::movelib::make_unique<Color>(color);
-
-  else
+  try
   {
-    const double dist_left = distance(color, *leftcolor);
-    const double dist_right = distance(color, *rightcolor);
+    if (leftcolor == nullptr)
+      leftcolor = boost::movelib::make_unique<Color>(color);
 
-    if (dist_left > dist_right)
-    {
-      if (right == nullptr)
-        right = boost::movelib::make_unique<ColorTree>();
+    else if (rightcolor == nullptr)
+      rightcolor = boost::movelib::make_unique<Color>(color);
 
-      // note that constructor sets maxright to be negative
-
-      maxright = std::max(maxright, dist_right);
-
-      right->insert(color);
-      ++treesize;
-    }
     else
     {
-      if (left == nullptr)
-        left = boost::movelib::make_unique<ColorTree>();
+      const double dist_left = distance(color, *leftcolor);
+      const double dist_right = distance(color, *rightcolor);
 
-      // note that constructor sets maxleft to be negative
+      if (dist_left > dist_right)
+      {
+        if (right == nullptr)
+          right = boost::movelib::make_unique<ColorTree>();
 
-      maxleft = std::max(maxleft, dist_left);
+        // note that constructor sets maxright to be negative
 
-      left->insert(color);
-      ++treesize;
+        maxright = std::max(maxright, dist_right);
+
+        right->insert(color);
+        ++treesize;
+      }
+      else
+      {
+        if (left == nullptr)
+          left = boost::movelib::make_unique<ColorTree>();
+
+        // note that constructor sets maxleft to be negative
+
+        maxleft = std::max(maxleft, dist_left);
+
+        left->insert(color);
+        ++treesize;
+      }
     }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -429,11 +444,18 @@ void ColorTree::insert(Color color)
 
 Color ColorTree::nearest(Color color)
 {
-  Color bestcolor;
-  double radius = -1;
-  if (!nearest(color, bestcolor, radius))
-    throw std::runtime_error("Invalid use of color reduction tables: no match was found");
-  return bestcolor;
+  try
+  {
+    Color bestcolor;
+    double radius = -1;
+    if (!nearest(color, bestcolor, radius))
+      throw Fmi::Exception(BCP, "Invalid use of color reduction tables: no match was found");
+    return bestcolor;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -446,68 +468,75 @@ Color ColorTree::nearest(Color color)
 
 bool ColorTree::nearest(Color color, Color& nearest, double& radius) const
 {
-  float left_dist = -1;
-  float right_dist = -1;
-  bool found = false;
-
-  // first test each of the left and right positions to see if
-  // one holds a color nearer than the nearest so far discovered
-
-  if (leftcolor != nullptr)
+  try
   {
-    left_dist = distance(color, *leftcolor);
-    if (radius < 0 || left_dist <= radius)
+    float left_dist = -1;
+    float right_dist = -1;
+    bool found = false;
+
+    // first test each of the left and right positions to see if
+    // one holds a color nearer than the nearest so far discovered
+
+    if (leftcolor != nullptr)
     {
-      radius = left_dist;
-      nearest = *leftcolor;
-      found = true;
+      left_dist = distance(color, *leftcolor);
+      if (radius < 0 || left_dist <= radius)
+      {
+        radius = left_dist;
+        nearest = *leftcolor;
+        found = true;
+      }
     }
-  }
 
-  if (rightcolor != nullptr)
-  {
-    right_dist = distance(color, *rightcolor);
-    if (radius < 0 || right_dist <= radius)
+    if (rightcolor != nullptr)
     {
-      radius = right_dist;
-      nearest = *rightcolor;
-      found = true;
+      right_dist = distance(color, *rightcolor);
+      if (radius < 0 || right_dist <= radius)
+      {
+        radius = right_dist;
+        nearest = *rightcolor;
+        found = true;
+      }
     }
-  }
 
-  // if radius is negative at this point, the tree is empty
-  // on the other hand, if the radius is zero, we found a match
+    // if radius is negative at this point, the tree is empty
+    // on the other hand, if the radius is zero, we found a match
 
-  if (radius <= 0)
+    if (radius <= 0)
+      return found;
+
+    // Now we test to see if the branches below might hold an object
+    // nearer than the best so far found. The triangle rule is used
+    // to test whether it's even necessary to descend. We may be
+    // able to skip skanning both branches if we can guess which
+    // branch is most likely to contain the nearest match. We simply
+    // guess, that it is the branch which is nearer. Note that
+    // the first and third if-clauses are mutually exclusive,
+    // hence only parts 1-2 or 2-3 will be executed.
+
+    const bool left_closer = (left_dist < right_dist);
+
+    if (!left_closer && (right != nullptr) && ((radius + maxright) >= right_dist))
+    {
+      found |= right->nearest(color, nearest, radius);
+    }
+
+    if ((left != nullptr) && ((radius + maxleft) >= left_dist))
+    {
+      found |= left->nearest(color, nearest, radius);
+    }
+
+    if (left_closer && (right != nullptr) && ((radius + maxright) >= right_dist))
+    {
+      found |= right->nearest(color, nearest, radius);
+    }
+
     return found;
-
-  // Now we test to see if the branches below might hold an object
-  // nearer than the best so far found. The triangle rule is used
-  // to test whether it's even necessary to descend. We may be
-  // able to skip skanning both branches if we can guess which
-  // branch is most likely to contain the nearest match. We simply
-  // guess, that it is the branch which is nearer. Note that
-  // the first and third if-clauses are mutually exclusive,
-  // hence only parts 1-2 or 2-3 will be executed.
-
-  const bool left_closer = (left_dist < right_dist);
-
-  if (!left_closer && (right != nullptr) && ((radius + maxright) >= right_dist))
-  {
-    found |= right->nearest(color, nearest, radius);
   }
-
-  if ((left != nullptr) && ((radius + maxleft) >= left_dist))
+  catch (...)
   {
-    found |= left->nearest(color, nearest, radius);
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
-
-  if (left_closer && (right != nullptr) && ((radius + maxright) >= right_dist))
-  {
-    found |= right->nearest(color, nearest, radius);
-  }
-
-  return found;
 }
 
 }  // namespace Giza
