@@ -1,7 +1,7 @@
 #include "ColorMapper.h"
 #include "ColorTree.h"
-#include <macgyver/Exception.h>
 #include <boost/lexical_cast.hpp>
+#include <macgyver/Exception.h>
 #include <algorithm>
 #include <cmath>
 #include <memory>
@@ -343,8 +343,6 @@ void build_tree(cairo_surface_t *image,
   }
 }
 
-
-
 bool colorcmp(const ColorInfo &info1, const ColorInfo &info2)
 {
   try
@@ -403,11 +401,13 @@ void ColorMapper::options(const ColorMapOptions &theOptions)
     itsOptions = theOptions;
 
     if (itsOptions.quality < 1)
-      throw Fmi::Exception(BCP, "Requested relative color map quality must be at least 1, value " +
+      throw Fmi::Exception(BCP,
+                           "Requested relative color map quality must be at least 1, value " +
                                boost::lexical_cast<std::string>(itsOptions.quality) + " was given");
 
     if (itsOptions.errorfactor < 1.1)
-      throw Fmi::Exception(BCP, "Image color quantization error factor must be at least 1.1, value " +
+      throw Fmi::Exception(BCP,
+                           "Image color quantization error factor must be at least 1.1, value " +
                                boost::lexical_cast<std::string>(itsOptions.errorfactor) +
                                " was given");
   }
@@ -462,7 +462,7 @@ const ColorMap &ColorMapper::colormap() const
  */
 // ----------------------------------------------------------------------
 
-Histogram ColorMapper::histogram(cairo_surface_t *image) const
+Histogram ColorMapper::histogram(cairo_surface_t *image)
 {
   try
   {

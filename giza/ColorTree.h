@@ -18,7 +18,7 @@ namespace Giza
 class ColorTree
 {
  public:
-  ColorTree();
+  ColorTree() = default;
   ColorTree(const ColorTree& other) = delete;
   ColorTree& operator=(const ColorTree& other) = delete;
 
@@ -33,9 +33,9 @@ class ColorTree
  private:
   bool nearest(Color color, Color& nearest, double& radius) const;
 
-  double maxleft;
-  double maxright;
-  int treesize;
+  double maxleft = -1.0;
+  double maxright = -1.0;
+  int treesize = 0;
   boost::movelib::unique_ptr<Color> leftcolor;
   boost::movelib::unique_ptr<Color> rightcolor;
   boost::movelib::unique_ptr<ColorTree> left;

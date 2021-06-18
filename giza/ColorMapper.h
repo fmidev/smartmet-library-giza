@@ -12,7 +12,7 @@ class ColorMapper
  public:
   void options(const ColorMapOptions& theOptions);
 
-  Histogram histogram(cairo_surface_t* image) const;
+  static Histogram histogram(cairo_surface_t* image);
   const ColorMap& colormap() const;
   void reduce(cairo_surface_t* image);
   bool trueColor() const;
