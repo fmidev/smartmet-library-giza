@@ -13,7 +13,9 @@ DEFINES = -DUNIX -D_REENTRANT
 # RHEL version dependent define
 
 $(eval $(shell grep VERSION_ID /etc/os-release | sed -e 's/\.[0-9]*//g'))
+ifneq ($(VERSION_ID),)
 DEFINES += -DVERSION_ID=$(VERSION_ID)
+endif
 
 LIBS += -L$(libdir) \
  -lsmartmet-macgyver \
