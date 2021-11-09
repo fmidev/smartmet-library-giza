@@ -11,6 +11,10 @@
 // Note: In RHEL6 fontconfig, pango, cairo combination was not thread safe
 // The problem was fixed in RHEL7.
 
+#ifndef VERSION_ID
+#define VERSION_ID 8
+#endif
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Data holder for generating raw image data
