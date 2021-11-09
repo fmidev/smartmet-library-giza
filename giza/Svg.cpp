@@ -49,7 +49,7 @@ std::string svg_to_pdf_or_ps(const std::string &svg, bool ispdf)
 
     const auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
 
-#if VERSION_ID < 8
+#if defined(VERSION_ID) && VERSION_ID < 8
     handle = rsvg_handle_new_from_data_with_flags(
         indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
 #else
@@ -133,7 +133,7 @@ std::string topng(const std::string &svg, const ColorMapOptions &options)
 
       const auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
 
-#if VERSION_ID < 8
+#if defined(VERSION_ID) && VERSION_ID < 8
       handle = rsvg_handle_new_from_data_with_flags(
           indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
 #else
