@@ -1,10 +1,15 @@
 #include "ColorMapper.h"
 #include <boost/filesystem.hpp>
 #include <boost/functional/hash.hpp>
+#include <fmt/format.h>
 #include <regression/tframe.h>
+#include <macgyver/StringConversion.h>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
+
+std::ostringstream comp_results;
 
 std::size_t filehash(const std::string& filename)
 {
@@ -14,6 +19,45 @@ std::size_t filehash(const std::string& filename)
   std::stringstream buffer;
   buffer << in.rdbuf();
   return boost::hash_value(buffer.str());
+}
+
+std::string readfile(const std::string& filename)
+{
+  std::ifstream in(filename.c_str());
+  if (!in)
+    throw std::runtime_error("Failed to open '" + filename + "' for reading");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  return buffer.str();
+}
+
+double imagedifference(const std::string& file1, const std::string& file2)
+{
+  std::string tmpfile = "svgdiff.txt";
+  auto cmd = fmt::format("compare -metric PSNR {} {} /dev/null > {} 2>&1", file1, file2, tmpfile);
+  system(cmd.c_str());
+  auto ret = readfile(tmpfile);
+  boost::filesystem::remove(tmpfile);
+  if (ret == "inf")
+    return 0;
+  return Fmi::stod(ret);
+}
+
+bool checkimage(const std::string& output, const std::string& expected)
+{
+    if (filehash(output) == filehash(expected)) {
+        return true;
+    } else {
+        double psnr = imagedifference(output, expected);
+
+        std::string diff_fn = output.substr(0, output.length() - 4) + ".difference.png";
+        auto cmd = fmt::format("/bin/sh -c '( composite {} {} -compose DIFFERENCE png:- |"
+            " convert -quiet - -contrast-stretch 0 {} )'",
+            expected, output, diff_fn);
+        system(cmd.c_str());
+        comp_results << " PSNR(" << output << ", " << expected << ") = " << psnr << "\n";
+        return psnr > 30;
+    }
 }
 
 namespace Tests
@@ -36,8 +80,9 @@ void defaults()
   if (status != CAIRO_STATUS_SUCCESS)
     TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
-  if (filehash(testfile) != filehash(outfile))
-    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+  if (!checkimage(testfile, outfile)) {
+    TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
+  }
 
   boost::filesystem::remove(testfile);
 
@@ -69,8 +114,9 @@ void quality()
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
-    if (filehash(testfile) != filehash(outfile))
-      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+    if (!checkimage(testfile, outfile)) {
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
+    }
 
     boost::filesystem::remove(testfile);
   }
@@ -96,8 +142,8 @@ void quality()
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
-    if (filehash(testfile) != filehash(outfile))
-      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+    if (!checkimage(testfile, outfile))
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
 
     boost::filesystem::remove(testfile);
   }
@@ -131,8 +177,9 @@ void maxcolors()
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
-    if (filehash(testfile) != filehash(outfile))
-      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+    if (!checkimage(testfile, outfile)) {
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
+    }
 
     boost::filesystem::remove(testfile);
   }
@@ -158,8 +205,9 @@ void maxcolors()
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
-    if (filehash(testfile) != filehash(outfile))
-      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+    if (!checkimage(testfile, outfile)) {
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
+    }
 
     boost::filesystem::remove(testfile);
   }
@@ -184,8 +232,9 @@ void maxcolors()
     if (status != CAIRO_STATUS_SUCCESS)
       TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
-    if (filehash(testfile) != filehash(outfile))
-      TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+    if (!checkimage(testfile, outfile)) {
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
+    }
 
     boost::filesystem::remove(testfile);
   }
@@ -211,8 +260,9 @@ void transparency()
   if (status != CAIRO_STATUS_SUCCESS)
     TEST_FAILED("Failed to write " + testfile + " : " + cairo_status_to_string(status));
 
-  if (filehash(testfile) != filehash(outfile))
-    TEST_FAILED("Hash for " + outfile + " and " + testfile + " differ");
+  if (!checkimage(testfile, outfile)) {
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
+  }
 
   boost::filesystem::remove(testfile);
 
@@ -241,5 +291,9 @@ int main(void)
 {
   cout << endl << "ColorMapper tester" << endl << "==================" << endl;
   Tests::tests t;
-  return t.run();
+  auto result = t.run();
+  if (comp_results.str() != "") {
+      std::cout << std::endl << comp_results.str() << std::endl;
+  }
+  return result;
 }
