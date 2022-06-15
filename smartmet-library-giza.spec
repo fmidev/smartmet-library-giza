@@ -10,39 +10,36 @@ Group: Development/Libraries
 URL: https://github.com/fmidev/smartmet-library-giza
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
+
+%if 0%{?rhel} && 0%{rhel} < 9
+%define smartmet_boost boost169
+%else
+%define smartmet_boost boost
+%endif
+
 BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
-BuildRequires: boost169-devel
-BuildRequires: smartmet-library-macgyver-devel >= 21.6.16
-%if 0%{rhel} >= 8
+BuildRequires: %{smartmet_boost}-devel
+BuildRequires: smartmet-library-macgyver-devel >= 22.6.16
 BuildRequires: librsvg2-devel >= 2.40.6
 Requires: librsvg2 >= 2.40.6
-%else
-BuildRequires: librsvg2-devel = 2.40.6
-Requires: librsvg2 = 2.40.6
-%endif
 BuildRequires: cairo-devel
 Requires: cairo
-Requires: smartmet-library-macgyver >= 21.6.16
+Requires: smartmet-library-macgyver >= 22.6.16
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: fmt-devel
 #TestRequires: cairo-devel
-#TestRequires: boost169-devel
+#TestRequires: %{smartmet_boost}-devel
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
-#TestRequires: smartmet-library-macgyver-devel >= 21.6.16
-#TestRequires: smartmet-library-macgyver >= 21.6.16
+#TestRequires: smartmet-library-macgyver-devel >= 22.6.16
+#TestRequires: smartmet-library-macgyver >= 22.6.16
 #TestRequires: ImageMagick
-%if 0%{rhel} >= 8
 #TestRequires: librsvg2-devel >= 2.40.6
 #TestRequires: librsvg2 >= 2.40.6
-%else
-#TestRequires: librsvg2-devel = 2.40.6
-#TestRequires: librsvg2 = 2.40.6
-%endif
 
 %description
 FMI Extensions to Cairo Graphics
