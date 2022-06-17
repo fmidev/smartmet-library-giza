@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 21.6.18
+Version: 22.6.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -81,6 +81,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Fri Jun 17 2022 Andris Pavēnis <andris.pavenis@fmi.fi> 22.6.17-1.fmi
+- Add support for RHEL9. Update libpqxx to 7.7.0 (rhel8+) and fmt to 8.1.1
+
 * Fri Jun 18 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.6.18-1.fmi
 - Silenced some CodeChecker warnings
 
