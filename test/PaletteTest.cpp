@@ -31,8 +31,8 @@ void palette()
 
   cairo_surface_destroy(image);
 
-  if (palette.size() != 135)
-      TEST_FAILED(("Expected to built a palette of size 135. Got "
+  if (palette.size() < 135 || palette.size() > 136)
+      TEST_FAILED(("Expected to built a palette of size 135 or 136. Got "
               + std::to_string(palette.size())).c_str());
 
 #if 0
