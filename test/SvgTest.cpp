@@ -61,6 +61,90 @@ void topng()
 
 // ----------------------------------------------------------------------
 
+void towebp()
+{
+  std::string infile = "input/svg1.svg";
+  std::string outfile = "output/webp_svg1.webp";
+  std::string testfile = "failures/webp_svg1.webp";
+
+  std::string svg = readfile(infile);
+  writefile(testfile, Giza::Svg::towebp(svg));
+  auto diff = imagedifference(testfile, outfile);
+  if (diff > error_limit)
+    TEST_FAILED("Difference = " + Fmi::to_string(diff));
+  boost::filesystem::remove(testfile);
+
+  TEST_PASSED();
+}
+
+// ----------------------------------------------------------------------
+
+void towebp_transparency()
+{
+  std::string infile = "input/svg2.svg";
+  std::string outfile = "output/webp_svg2.webp";
+  std::string testfile = "failures/webp_svg2.webp";
+
+  std::string svg = readfile(infile);
+  writefile(testfile, Giza::Svg::towebp(svg));
+  auto diff = imagedifference(testfile, outfile);
+  if (diff > error_limit)
+    TEST_FAILED("Difference = " + Fmi::to_string(diff));
+  boost::filesystem::remove(testfile);
+
+  TEST_PASSED();
+}
+
+// ----------------------------------------------------------------------
+
+void towebp_transparent_symbols()
+{
+  {
+    std::string infile = "input/svg3.svg";
+    std::string outfile = "output/webp_svg3.webp";
+    std::string testfile = "failures/webp_svg3.webp";
+
+    std::string svg = readfile(infile);
+    writefile(testfile, Giza::Svg::towebp(svg));
+    auto diff = imagedifference(testfile, outfile);
+    if (diff > error_limit)
+      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    boost::filesystem::remove(testfile);
+
+    boost::filesystem::remove(testfile);
+  }
+
+  {
+    std::string infile = "input/svg4.svg";
+    std::string outfile = "output/webp_svg4.webp";
+    std::string testfile = "failures/webp_svg4.webp";
+
+    std::string svg = readfile(infile);
+    writefile(testfile, Giza::Svg::towebp(svg));
+    auto diff = imagedifference(testfile, outfile);
+    if (diff > error_limit)
+      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    boost::filesystem::remove(testfile);
+  }
+
+  {
+    std::string infile = "input/svg5.svg";
+    std::string outfile = "output/webp_svg5.webp";
+    std::string testfile = "failures/webp_svg5.webp";
+
+    std::string svg = readfile(infile);
+    writefile(testfile, Giza::Svg::towebp(svg));
+    auto diff = imagedifference(testfile, outfile);
+    if (diff > error_limit)
+      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    boost::filesystem::remove(testfile);
+  }
+
+  TEST_PASSED();
+}
+
+// ----------------------------------------------------------------------
+
 void topng_transparency()
 {
   std::string infile = "input/svg2.svg";
@@ -174,6 +258,11 @@ class tests : public tframe::tests
     // integrated timestamp in binary?) TEST(topdf);
     TEST(topng_transparency);
     TEST(topng_transparent_symbols);
+
+    TEST(towebp);
+    TEST(towebp_transparency);
+    TEST(towebp_transparent_symbols);
+
     // TEST(tops);	// CreationDate changes every time!
   }
 
