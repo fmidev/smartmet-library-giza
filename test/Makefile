@@ -11,6 +11,7 @@ LIBS += ../libsmartmet-giza.so \
 	-lboost_filesystem \
 	-lboost_system \
 	-lfmt \
+	-lwebp \
 	$(REQUIRED_LIBS)
 
 all: $(PROG)

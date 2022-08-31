@@ -101,6 +101,76 @@ namespace Svg
  */
 // ----------------------------------------------------------------------
 
+std::string towebp(const std::string &svg)
+{
+  try
+  {
+    ColorMapOptions options;
+    return towebp(svg, options);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Convert SVG to WEBP in memory
+ */
+// ----------------------------------------------------------------------
+
+std::string towebp(const std::string &svg, const ColorMapOptions &options)
+{
+  try
+  {
+    cairo_surface_t *image = nullptr;
+    cairo_t *cr = nullptr;
+    RsvgHandle *handle = nullptr;
+
+    {
+      // BrainStorm::WriteLock lock(globalPngMutex);
+
+      const auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
+
+#if defined(VERSION_ID) && VERSION_ID < 8
+      handle = rsvg_handle_new_from_data_with_flags(
+          indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
+#else
+      handle = rsvg_handle_new_from_data(indata, svg.size(), nullptr);
+#endif
+
+      if (handle == nullptr)
+        throw Fmi::Exception(BCP, "Failed to get rsvg handle on the SVG data");
+
+      RsvgDimensionData dimensions;
+      rsvg_handle_get_dimensions(handle, &dimensions);
+      image = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, dimensions.width, dimensions.height);
+      cr = cairo_create(image);
+      rsvg_handle_render_cairo(handle, cr);
+    }
+
+    g_object_unref(handle);  // Deprecated: rsvg_handle_free(handle);
+
+    std::string buffer = Giza::towebp(image, options);
+
+    cairo_surface_destroy(image);
+    cairo_destroy(cr);
+
+    return buffer;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Convert SVG to PNG in memory
+ */
+// ----------------------------------------------------------------------
+
 std::string topng(const std::string &svg)
 {
   try

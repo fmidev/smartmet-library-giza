@@ -19,6 +19,7 @@ endif
 
 LIBS += -L$(libdir) \
  -lsmartmet-macgyver \
+ -lwebp \
 	$(LIBRSVG_LIBS) \
 	$(CAIRO_LIBS)
 
