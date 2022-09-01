@@ -7,7 +7,7 @@
 
 using namespace std;
 
-const double error_limit = 30.0;
+const double error_limit = 10.0;
 
 std::string readfile(const std::string& filename)
 {
