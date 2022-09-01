@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 22.6.17
+Version: 22.8.31
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -21,22 +21,25 @@ BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: %{smartmet_boost}-devel
-BuildRequires: smartmet-library-macgyver-devel >= 22.6.16
+BuildRequires: smartmet-library-macgyver-devel >= 22.8.23
 BuildRequires: librsvg2-devel >= 2.40.6
 Requires: librsvg2 >= 2.40.6
 BuildRequires: cairo-devel
+BuildRequires: libwebp-devel
 Requires: cairo
-Requires: smartmet-library-macgyver >= 22.6.16
+Requires: libwebp
+Requires: smartmet-library-macgyver >= 22.8.23
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: fmt-devel
 #TestRequires: cairo-devel
+#TestRequires: libwebp-tools
 #TestRequires: %{smartmet_boost}-devel
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
-#TestRequires: smartmet-library-macgyver-devel >= 22.6.16
-#TestRequires: smartmet-library-macgyver >= 22.6.16
+#TestRequires: smartmet-library-macgyver-devel >= 22.8.23
+#TestRequires: smartmet-library-macgyver >= 22.8.23
 #TestRequires: ImageMagick
 #TestRequires: librsvg2-devel >= 2.40.6
 #TestRequires: librsvg2 >= 2.40.6
@@ -81,6 +84,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Wed Aug 31 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.8.31-1.fmi
+- Added webp support
+
 * Fri Jun 17 2022 Andris Pavēnis <andris.pavenis@fmi.fi> 22.6.17-1.fmi
 - Add support for RHEL9. Update libpqxx to 7.7.0 (rhel8+) and fmt to 8.1.1
 
