@@ -34,7 +34,10 @@ Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: fmt-devel
 #TestRequires: cairo-devel
+#TestRequires: libwebp-devel
+%if 0%{?rhel} && 0%{rhel} < 8
 #TestRequires: libwebp-tools
+%endif
 #TestRequires: %{smartmet_boost}-devel
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
