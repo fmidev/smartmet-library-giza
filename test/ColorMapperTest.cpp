@@ -37,6 +37,12 @@ double imagedifference(const std::string& file1, const std::string& file2)
   auto cmd = fmt::format("compare -metric PSNR {} {} /dev/null > {} 2>&1", file1, file2, tmpfile);
   system(cmd.c_str());
   auto ret = readfile(tmpfile);
+  // Newer compare appends (<another value>). Remove it if found
+  auto pos = ret.find_first_of(" \t\r\n(");
+  if (pos != std::string::npos) {
+      ret = ret.substr(0, pos);
+  }
+
   boost::filesystem::remove(tmpfile);
   if (ret == "inf")
     return 0;
