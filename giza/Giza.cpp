@@ -2,12 +2,12 @@
 #include "ColorMapper.h"
 #include <cairo/cairo.h>
 #include <macgyver/Exception.h>
+#include <webp/encode.h>
 #include <cstring>
 #include <map>
 #include <png.h>
 #include <set>
 #include <vector>
-#include <webp/encode.h>
 
 namespace Giza
 {
@@ -64,7 +64,6 @@ void unpremultiply_data(png_structp /* png */, png_row_infop row_info, png_bytep
   }
 }
 
-
 // Cairo callback for writing image chunks
 
 void append_to_string(png_structp png, png_bytep data, png_size_t length)
@@ -80,10 +79,7 @@ void append_to_string(png_structp png, png_bytep data, png_size_t length)
   }
 }
 
-
-void giza_surface_write_to_webp_string(cairo_surface_t *image,
-                                      const ColorMapper &mapper,
-                                      std::string &buffer)
+void giza_surface_write_to_webp_string(cairo_surface_t *image, std::string &buffer)
 {
   try
   {
@@ -111,19 +107,20 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image,
 
     for (int i = 0; i < height; i++)
     {
-      uint *row = (uint*)(data + i * stride);
-      for (int x=0; x < width; x++)
+      uint *row = (uint *)(data + i * stride);
+      for (int x = 0; x < width; x++)
       {
         uint col = row[x];
-        row[x] = (col & 0xFF000000) + ((col & 0xFF0000) >> 16) + (col & 0x00FF00) + ((col & 0xFF) << 16);
+        row[x] =
+            (col & 0xFF000000) + ((col & 0xFF0000) >> 16) + (col & 0x00FF00) + ((col & 0xFF) << 16);
       }
     }
 
     uint8_t *output = nullptr;
-    size_t sz = WebPEncodeLosslessRGBA(data,width,height,stride,&output);
+    size_t sz = WebPEncodeLosslessRGBA(data, width, height, stride, &output);
 
-    if (sz  &&  output)
-      buffer.append(reinterpret_cast<const char *>(output),sz);
+    if (sz && output)
+      buffer.append(reinterpret_cast<const char *>(output), sz);
 
     free(output);
   }
@@ -132,7 +129,6 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
-
 
 void giza_surface_write_to_png_string(cairo_surface_t *image,
                                       const ColorMapper &mapper,
@@ -317,7 +313,7 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
           row += 4;
         }
         // And write the indices
-        png_write_row(png, &rows[0]);
+        png_write_row(png, rows.data());
       }
 
       // Write PNG tail, deallocate memory
@@ -347,7 +343,7 @@ std::string towebp(cairo_surface_t *image)
     mapper.reduce(image);
 
     std::string buffer;
-    giza_surface_write_to_webp_string(image, mapper, buffer);
+    giza_surface_write_to_webp_string(image, buffer);
     return buffer;
   }
   catch (...)
@@ -371,7 +367,7 @@ std::string towebp(cairo_surface_t *image, const ColorMapOptions &options)
     mapper.reduce(image);
 
     std::string buffer;
-    giza_surface_write_to_webp_string(image, mapper, buffer);
+    giza_surface_write_to_webp_string(image, buffer);
     return buffer;
   }
   catch (...)
