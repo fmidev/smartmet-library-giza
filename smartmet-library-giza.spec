@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 22.3.7
+Version: 23.3.21
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -87,7 +87,10 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
-* Tue Mar  7 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.3.7-1.fmi
+* Tue Mar 21 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.3.21-1.fmi
+- Fixed release year
+
+* Tue Mar  7 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.3.7-1.fmi
 - Silenced CodeChecker warnings
 
 * Wed Aug 31 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.8.31-1.fmi
