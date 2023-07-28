@@ -21,14 +21,14 @@ BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: %{smartmet_boost}-devel
-BuildRequires: smartmet-library-macgyver-devel >= 23.3.3
+BuildRequires: smartmet-library-macgyver-devel >= 23.7.28
 BuildRequires: librsvg2-devel >= 2.40.6
 Requires: librsvg2 >= 2.40.6
 BuildRequires: cairo-devel
 BuildRequires: libwebp-devel
 Requires: cairo
 Requires: libwebp
-Requires: smartmet-library-macgyver >= 23.3.3
+Requires: smartmet-library-macgyver >= 23.7.28
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
@@ -41,8 +41,8 @@ Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: %{smartmet_boost}-devel
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
-#TestRequires: smartmet-library-macgyver-devel >= 23.3.3
-#TestRequires: smartmet-library-macgyver >= 23.3.3
+#TestRequires: smartmet-library-macgyver-devel >= 23.7.28
+#TestRequires: smartmet-library-macgyver >= 23.7.28
 #TestRequires: ImageMagick
 #TestRequires: librsvg2-devel >= 2.40.6
 #TestRequires: librsvg2 >= 2.40.6
