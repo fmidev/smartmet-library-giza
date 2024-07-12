@@ -357,8 +357,8 @@ void ColorTree::clear()
 {
   try
   {
-    right = boost::movelib::make_unique<ColorTree>();
-    left = boost::movelib::make_unique<ColorTree>();
+    right = std::make_unique<ColorTree>();
+    left = std::make_unique<ColorTree>();
     treesize = 0;
   }
   catch (...)
@@ -384,10 +384,10 @@ void ColorTree::insert(Color color)
   try
   {
     if (leftcolor == nullptr)
-      leftcolor = boost::movelib::make_unique<Color>(color);
+      leftcolor = std::make_unique<Color>(color);
 
     else if (rightcolor == nullptr)
-      rightcolor = boost::movelib::make_unique<Color>(color);
+      rightcolor = std::make_unique<Color>(color);
 
     else
     {
@@ -397,7 +397,7 @@ void ColorTree::insert(Color color)
       if (dist_left > dist_right)
       {
         if (right == nullptr)
-          right = boost::movelib::make_unique<ColorTree>();
+          right = std::make_unique<ColorTree>();
 
         // note that constructor sets maxright to be negative
 
@@ -409,7 +409,7 @@ void ColorTree::insert(Color color)
       else
       {
         if (left == nullptr)
-          left = boost::movelib::make_unique<ColorTree>();
+          left = std::make_unique<ColorTree>();
 
         // note that constructor sets maxleft to be negative
 

@@ -8,7 +8,6 @@ INCLUDES += -I ../giza
 
 LIBS += ../libsmartmet-giza.so \
 	-lsmartmet-macgyver \
-	-lboost_filesystem \
 	-lboost_system \
 	-lfmt \
 	-lwebp \

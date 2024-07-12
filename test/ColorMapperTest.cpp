@@ -1,5 +1,5 @@
 #include "ColorMapper.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/functional/hash.hpp>
 #include <fmt/format.h>
 #include <regression/tframe.h>
@@ -43,7 +43,7 @@ double imagedifference(const std::string& file1, const std::string& file2)
       ret = ret.substr(0, pos);
   }
 
-  boost::filesystem::remove(tmpfile);
+  std::filesystem::remove(tmpfile);
   if (ret == "inf")
     return 0;
   return Fmi::stod(ret);
@@ -90,7 +90,7 @@ void defaults()
     TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
   }
 
-  boost::filesystem::remove(testfile);
+  std::filesystem::remove(testfile);
 
   TEST_PASSED();
 }
@@ -124,7 +124,7 @@ void quality()
       TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     }
 
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   {
@@ -151,7 +151,7 @@ void quality()
     if (!checkimage(testfile, outfile))
       TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
 
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   TEST_PASSED();
@@ -187,7 +187,7 @@ void maxcolors()
       TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     }
 
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   {
@@ -215,7 +215,7 @@ void maxcolors()
       TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     }
 
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   {
@@ -242,7 +242,7 @@ void maxcolors()
       TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     }
 
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   TEST_PASSED();
@@ -270,7 +270,7 @@ void transparency()
       TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
   }
 
-  boost::filesystem::remove(testfile);
+  std::filesystem::remove(testfile);
 
   TEST_PASSED();
 }
