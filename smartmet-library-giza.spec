@@ -23,6 +23,7 @@ BuildRequires: make
 BuildRequires: %{smartmet_boost}-devel
 BuildRequires: smartmet-library-macgyver-devel >= 24.7.12
 BuildRequires: librsvg2-devel >= 2.40.6
+BuildRequires: gcem-devel
 Requires: librsvg2 >= 2.40.6
 BuildRequires: cairo-devel
 BuildRequires: libwebp-devel
