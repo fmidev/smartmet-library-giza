@@ -1,5 +1,4 @@
 #include "ColorTree.h"
-#include <boost/move/make_unique.hpp>
 #include <macgyver/Exception.h>
 #include <array>
 #include <cassert>
