@@ -6,7 +6,9 @@ include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
 INCLUDES += -I ../giza
 
-LIBS += ../libsmartmet-giza.so \
+LIBS += \
+	../libsmartmet-giza.so \
+	$(PREFIX_LDFLAGS) \
 	-lsmartmet-macgyver \
 	-lboost_system \
 	-lfmt \
@@ -24,7 +26,7 @@ test: $(PROG)
 	  ( ./$$prog || touch $$prog.err ) ; \
 	done
 	@test `find . -name \*.err | wc -l` = "0" || ( echo ; echo "The following tests have errors:" ; \
-		for i in *.err ; do echo `basename $$i .err`; done ; rm -f *.err ; false ) 
+		for i in *.err ; do echo `basename $$i .err`; done ; rm -f *.err ; false )
 
 $(PROG) : % : %.cpp ../libsmartmet-giza.so
 	$(CXX) $(CFLAGS) -o $@ $@.cpp $(INCLUDES) $(LIBS)

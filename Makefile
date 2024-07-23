@@ -17,9 +17,10 @@ ifneq ($(VERSION_ID),)
 DEFINES += -DVERSION_ID=$(VERSION_ID)
 endif
 
-LIBS += -L$(libdir) \
- -lsmartmet-macgyver \
- -lwebp \
+LIBS += \
+	$(PREFIX_LDFLAGS) \
+	-lsmartmet-macgyver \
+	-lwebp \
 	$(LIBRSVG_LIBS) \
 	$(CAIRO_LIBS)
 
@@ -62,6 +63,7 @@ $(LIBFILE): $(OBJS)
 clean:
 	rm -f $(LIBFILE) *~ $(SUBNAME)/*~
 	rm -rf $(objdir)
+	$(MAKE) -C test clean
 
 format:
 	clang-format -i -style=file $(SUBNAME)/*.h $(SUBNAME)/*.cpp test/*.cpp
