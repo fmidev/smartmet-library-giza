@@ -1,5 +1,5 @@
 #include "Svg.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fmt/format.h>
 #include <macgyver/StringConversion.h>
 #include <regression/tframe.h>
@@ -39,7 +39,7 @@ double imagedifference(const std::string& file1, const std::string& file2)
       ret = ret.substr(0, pos);
   }
 
-  boost::filesystem::remove(tmpfile);
+  std::filesystem::remove(tmpfile);
   if (ret == "inf")
     return 0;
   return Fmi::stod(ret);
@@ -60,7 +60,7 @@ void topng()
   auto diff = imagedifference(testfile, outfile);
   if (diff > error_limit)
     TEST_FAILED("Difference = " + Fmi::to_string(diff));
-  boost::filesystem::remove(testfile);
+  std::filesystem::remove(testfile);
 
   TEST_PASSED();
 }
@@ -78,7 +78,7 @@ void towebp()
   auto diff = imagedifference(testfile, outfile);
   if (diff > error_limit)
     TEST_FAILED("Difference = " + Fmi::to_string(diff));
-  boost::filesystem::remove(testfile);
+  std::filesystem::remove(testfile);
 
   TEST_PASSED();
 }
@@ -96,7 +96,7 @@ void towebp_transparency()
   auto diff = imagedifference(testfile, outfile);
   if (diff > error_limit)
     TEST_FAILED("Difference = " + Fmi::to_string(diff));
-  boost::filesystem::remove(testfile);
+  std::filesystem::remove(testfile);
 
   TEST_PASSED();
 }
@@ -115,9 +115,9 @@ void towebp_transparent_symbols()
     auto diff = imagedifference(testfile, outfile);
     if (diff > error_limit)
       TEST_FAILED("Difference = " + Fmi::to_string(diff));
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
 
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   {
@@ -130,7 +130,7 @@ void towebp_transparent_symbols()
     auto diff = imagedifference(testfile, outfile);
     if (diff > error_limit)
       TEST_FAILED("Difference = " + Fmi::to_string(diff));
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   {
@@ -143,7 +143,7 @@ void towebp_transparent_symbols()
     auto diff = imagedifference(testfile, outfile);
     if (diff > error_limit)
       TEST_FAILED("Difference = " + Fmi::to_string(diff));
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   TEST_PASSED();
@@ -162,7 +162,7 @@ void topng_transparency()
   auto diff = imagedifference(testfile, outfile);
   if (diff > error_limit)
     TEST_FAILED("Difference = " + Fmi::to_string(diff));
-  boost::filesystem::remove(testfile);
+  std::filesystem::remove(testfile);
 
   TEST_PASSED();
 }
@@ -181,9 +181,9 @@ void topng_transparent_symbols()
     auto diff = imagedifference(testfile, outfile);
     if (diff > error_limit)
       TEST_FAILED("Difference = " + Fmi::to_string(diff));
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
 
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   {
@@ -196,7 +196,7 @@ void topng_transparent_symbols()
     auto diff = imagedifference(testfile, outfile);
     if (diff > error_limit)
       TEST_FAILED("Difference = " + Fmi::to_string(diff));
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   {
@@ -209,7 +209,7 @@ void topng_transparent_symbols()
     auto diff = imagedifference(testfile, outfile);
     if (diff > error_limit)
       TEST_FAILED("Difference = " + Fmi::to_string(diff));
-    boost::filesystem::remove(testfile);
+    std::filesystem::remove(testfile);
   }
 
   TEST_PASSED();
@@ -228,7 +228,7 @@ void topdf()
   auto diff = imagedifference(testfile, outfile);
   if (diff > error_limit)
     TEST_FAILED("Difference = " + Fmi::to_string(diff));
-  boost::filesystem::remove(testfile);
+  std::filesystem::remove(testfile);
 
   TEST_PASSED();
 }
@@ -246,7 +246,7 @@ void tops()
   auto diff = imagedifference(testfile, outfile);
   if (diff > error_limit)
     TEST_FAILED("Difference = " + Fmi::to_string(diff));
-  boost::filesystem::remove(testfile);
+  std::filesystem::remove(testfile);
 
   TEST_PASSED();
 }
