@@ -6,6 +6,7 @@
 #include <macgyver/StringConversion.h>
 #include <fstream>
 #include <sstream>
+#include <Magick++.h>
 
 using namespace std;
 
@@ -31,22 +32,29 @@ std::string readfile(const std::string& filename)
   return buffer.str();
 }
 
+std::string convert_exe()
+{
+  if (access("/usr/bin/magick", X_OK) == 0)
+    return "/usr/bin/magick";
+  return "convert"; // Assuming 'convert' is in the PATH
+}
+
 double imagedifference(const std::string& file1, const std::string& file2)
 {
-  std::string tmpfile = "svgdiff.txt";
-  auto cmd = fmt::format("compare -metric PSNR {} {} /dev/null > {} 2>&1", file1, file2, tmpfile);
-  system(cmd.c_str());
-  auto ret = readfile(tmpfile);
-  // Newer compare appends (<another value>). Remove it if found
-  auto pos = ret.find_first_of(" \t\r\n(");
-  if (pos != std::string::npos) {
-      ret = ret.substr(0, pos);
+  Magick::Image image1(file1);
+  Magick::Image image2(file2);
+
+  // Ensure both images are the same size
+  if (image1.size() != image2.size()) {
+      throw std::runtime_error("Images are not the same size: " + file1 + " and " + file2);
   }
 
-  std::filesystem::remove(tmpfile);
-  if (ret == "inf")
-    return 0;
-  return Fmi::stod(ret);
+  const double mse = image1.compare(image2, Magick::MetricType::MeanSquaredErrorMetric);
+  const double psnr = (mse == 0)
+    ? std::numeric_limits<double>::infinity()
+    : 20 * log10(1.0 / sqrt(mse));
+
+  return psnr;
 }
 
 bool checkimage(const std::string& output, const std::string& expected)
@@ -58,8 +66,8 @@ bool checkimage(const std::string& output, const std::string& expected)
 
         std::string diff_fn = output.substr(0, output.length() - 4) + ".difference.png";
         auto cmd = fmt::format("/bin/sh -c '( composite {} {} -compose DIFFERENCE png:- |"
-            " convert -quiet - -contrast-stretch 0 {} )'",
-            expected, output, diff_fn);
+            "{} -quiet - -contrast-stretch 0 {} )'",
+            expected, output, convert_exe(), diff_fn);
         system(cmd.c_str());
         comp_results << " PSNR(" << output << ", " << expected << ") = " << psnr << "\n";
         return psnr > 30;
@@ -295,6 +303,7 @@ class tests : public tframe::tests
 
 int main(void)
 {
+  Magick::InitializeMagick(nullptr);
   cout << endl << "ColorMapper tester" << endl << "==================" << endl;
   Tests::tests t;
   auto result = t.run();

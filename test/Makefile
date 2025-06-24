@@ -13,6 +13,9 @@ LIBS += ../libsmartmet-giza.so \
 	-lwebp \
 	$(REQUIRED_LIBS)
 
+CFLAGS += $(shell pkg-config --cflags Magick++)
+LIBS += $(shell pkg-config --libs Magick++)
+
 all: $(PROG)
 clean:
 	rm -f $(PROG) *~

@@ -4,10 +4,14 @@
 #include <macgyver/StringConversion.h>
 #include <regression/tframe.h>
 #include <fstream>
+#include <boost/functional/hash.hpp>
+#include <Magick++.h>
 
 using namespace std;
 
 const double error_limit = 40.0;
+
+std::ostringstream comp_results;
 
 std::string readfile(const std::string& filename)
 {
@@ -19,6 +23,11 @@ std::string readfile(const std::string& filename)
   return buffer.str();
 }
 
+std::size_t filehash(const std::string& filename)
+{
+  return boost::hash_value(readfile(filename));
+}
+
 void writefile(const std::string& filename, const std::string& data)
 {
   std::ofstream out(filename.c_str());
@@ -27,23 +36,51 @@ void writefile(const std::string& filename, const std::string& data)
   out << data;
 }
 
+std::string convert_exe()
+{
+  if (access("/usr/bin/magick", X_OK) == 0)
+    return "/usr/bin/magick";
+  return "convert"; // Assuming 'convert' is in the PATH
+}
+
 double imagedifference(const std::string& file1, const std::string& file2)
 {
-  std::string tmpfile = "svgdiff.txt";
-  auto cmd = fmt::format("compare -metric PSNR {} {} /dev/null > {} 2>&1", file1, file2, tmpfile);
-  system(cmd.c_str());
-  auto ret = readfile(tmpfile);
-  // Newer compare appends (<another value>). Remove it if found
-  auto pos = ret.find_first_of(" \t\r\n(");
-  if (pos != std::string::npos) {
-      ret = ret.substr(0, pos);
+  Magick::Image image1(file1);
+  Magick::Image image2(file2);
+
+  // Ensure both images are the same size
+  if (image1.size() != image2.size()) {
+      throw std::runtime_error("Images are not the same size: " + file1 + " and " + file2);
   }
 
-  std::filesystem::remove(tmpfile);
-  if (ret == "inf")
-    return 0;
-  return Fmi::stod(ret);
+  const double mse = image1.compare(image2, Magick::MetricType::MeanSquaredErrorMetric);
+  const double psnr = (mse == 0)
+    ? std::numeric_limits<double>::infinity()
+    : 20 * log10(1.0 / sqrt(mse));
+
+  return psnr;
 }
+
+bool checkimage(const std::string& output, const std::string& expected, double error_limit_ = error_limit)
+{
+    if (filehash(output) == filehash(expected)) {
+        return true;
+    } else {
+        double psnr = imagedifference(output, expected);
+        if (std::isinf(psnr)) {
+            return true;
+        }
+
+        std::string diff_fn = output.substr(0, output.length() - 4) + ".difference.png";
+        auto cmd = fmt::format("/bin/sh -c '( composite {} {} -compose DIFFERENCE png:- |"
+            "{} -quiet - -contrast-stretch 0 {} )'",
+            expected, output, convert_exe(), diff_fn);
+        system(cmd.c_str());
+        comp_results << " PSNR(" << output << ", " << expected << ") = " << psnr << "\n";
+        return psnr > error_limit_;
+    }
+}
+
 
 namespace Tests
 {
@@ -57,9 +94,8 @@ void topng()
 
   std::string svg = readfile(infile);
   writefile(testfile, Giza::Svg::topng(svg));
-  auto diff = imagedifference(testfile, outfile);
-  if (diff > error_limit)
-    TEST_FAILED("Difference = " + Fmi::to_string(diff));
+  if (!checkimage(testfile, outfile, 25.0))
+    TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
   std::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -75,9 +111,8 @@ void towebp()
 
   std::string svg = readfile(infile);
   writefile(testfile, Giza::Svg::towebp(svg));
-  auto diff = imagedifference(testfile, outfile);
-  if (diff > error_limit)
-    TEST_FAILED("Difference = " + Fmi::to_string(diff));
+  if (!checkimage(testfile, outfile, 25.0))
+    TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
   std::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -93,9 +128,8 @@ void towebp_transparency()
 
   std::string svg = readfile(infile);
   writefile(testfile, Giza::Svg::towebp(svg));
-  auto diff = imagedifference(testfile, outfile);
-  if (diff > error_limit)
-    TEST_FAILED("Difference = " + Fmi::to_string(diff));
+  if (!checkimage(testfile, outfile))
+    TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
   std::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -112,9 +146,8 @@ void towebp_transparent_symbols()
 
     std::string svg = readfile(infile);
     writefile(testfile, Giza::Svg::towebp(svg));
-    auto diff = imagedifference(testfile, outfile);
-    if (diff > error_limit)
-      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    if (!checkimage(testfile, outfile))
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     std::filesystem::remove(testfile);
 
     std::filesystem::remove(testfile);
@@ -127,9 +160,8 @@ void towebp_transparent_symbols()
 
     std::string svg = readfile(infile);
     writefile(testfile, Giza::Svg::towebp(svg));
-    auto diff = imagedifference(testfile, outfile);
-    if (diff > error_limit)
-      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    if (!checkimage(testfile, outfile))
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     std::filesystem::remove(testfile);
   }
 
@@ -140,9 +172,8 @@ void towebp_transparent_symbols()
 
     std::string svg = readfile(infile);
     writefile(testfile, Giza::Svg::towebp(svg));
-    auto diff = imagedifference(testfile, outfile);
-    if (diff > error_limit)
-      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    if (!checkimage(testfile, outfile))
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     std::filesystem::remove(testfile);
   }
 
@@ -159,9 +190,8 @@ void topng_transparency()
 
   std::string svg = readfile(infile);
   writefile(testfile, Giza::Svg::topng(svg));
-  auto diff = imagedifference(testfile, outfile);
-  if (diff > error_limit)
-    TEST_FAILED("Difference = " + Fmi::to_string(diff));
+  if (!checkimage(testfile, outfile))
+    TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
   std::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -178,9 +208,8 @@ void topng_transparent_symbols()
 
     std::string svg = readfile(infile);
     writefile(testfile, Giza::Svg::topng(svg));
-    auto diff = imagedifference(testfile, outfile);
-    if (diff > error_limit)
-      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    if (!checkimage(testfile, outfile))
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     std::filesystem::remove(testfile);
 
     std::filesystem::remove(testfile);
@@ -193,9 +222,8 @@ void topng_transparent_symbols()
 
     std::string svg = readfile(infile);
     writefile(testfile, Giza::Svg::topng(svg));
-    auto diff = imagedifference(testfile, outfile);
-    if (diff > error_limit)
-      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    if (!checkimage(testfile, outfile))
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     std::filesystem::remove(testfile);
   }
 
@@ -206,9 +234,8 @@ void topng_transparent_symbols()
 
     std::string svg = readfile(infile);
     writefile(testfile, Giza::Svg::topng(svg));
-    auto diff = imagedifference(testfile, outfile);
-    if (diff > error_limit)
-      TEST_FAILED("Difference = " + Fmi::to_string(diff));
+    if (!checkimage(testfile, outfile))
+      TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     std::filesystem::remove(testfile);
   }
 
@@ -225,9 +252,8 @@ void topdf()
 
   std::string svg = readfile(infile);
   writefile(testfile, Giza::Svg::topng(svg));
-  auto diff = imagedifference(testfile, outfile);
-  if (diff > error_limit)
-    TEST_FAILED("Difference = " + Fmi::to_string(diff));
+  if (!checkimage(testfile, outfile))
+    TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
   std::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -243,9 +269,8 @@ void tops()
 
   std::string svg = readfile(infile);
   writefile(testfile, Giza::Svg::topng(svg));
-  auto diff = imagedifference(testfile, outfile);
-  if (diff > error_limit)
-    TEST_FAILED("Difference = " + Fmi::to_string(diff));
+  if (!checkimage(testfile, outfile))
+    TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
   std::filesystem::remove(testfile);
 
   TEST_PASSED();
@@ -280,5 +305,9 @@ int main(void)
 {
   cout << endl << "Svg tester" << endl << "==========" << endl;
   Tests::tests t;
-  return t.run();
+  const auto retval = t.run();
+  if (comp_results.str() != "") {
+      std::cout << std::endl << comp_results.str() << std::endl;
+  }
+  return retval;
 }

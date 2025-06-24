@@ -46,6 +46,7 @@ Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: ImageMagick
 #TestRequires: librsvg2-devel >= 2.40.6
 #TestRequires: librsvg2 >= 2.40.6
+#TestRequires: ImageMagick-c++-devel
 
 %description
 FMI Extensions to Cairo Graphics
