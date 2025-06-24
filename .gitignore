@@ -4,5 +4,6 @@ obj/
 libsmartmet-giza.so
 *Test
 test/failures/*
+/.vscode
 
 
