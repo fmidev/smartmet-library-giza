@@ -63,6 +63,9 @@ bool checkimage(const std::string& output, const std::string& expected)
         return true;
     } else {
         double psnr = imagedifference(output, expected);
+        if (std::isinf(psnr)) {
+            return true; // Images are identical
+        }
 
         std::string diff_fn = output.substr(0, output.length() - 4) + ".difference.png";
         auto cmd = fmt::format("/bin/sh -c '( composite {} {} -compose DIFFERENCE png:- |"
