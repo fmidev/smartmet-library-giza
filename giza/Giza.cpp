@@ -47,7 +47,7 @@ void unpremultiply_data(png_structp /* png */, png_row_infop row_info, png_bytep
       alpha = (pixel & 0xff000000U) >> 24;
       if (alpha == 0)
       {
-        b[0] = b[1] = b[2] = b[3] = 0;
+        b[0] = b[1] = b[2] = b[3] = 0;  // normalize fully transparent colours
       }
       else
       {
@@ -103,7 +103,7 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image, std::string &buff
     int height = cairo_image_surface_get_height(image);
     int stride = cairo_image_surface_get_stride(image);
 
-    // Converting ARGB to RGBA:
+    // Converting ARGB32 and unpremultiplying by alpha
 
     for (int i = 0; i < height; i++)
     {
@@ -111,8 +111,16 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image, std::string &buff
       for (int x = 0; x < width; x++)
       {
         uint col = row[x];
-        row[x] =
-            (col & 0xFF000000) + ((col & 0xFF0000) >> 16) + (col & 0x00FF00) + ((col & 0xFF) << 16);
+        uint8_t alpha = (col & 0xff000000U) >> 24;
+        if (alpha == 0)
+          row[x] = 0;  // normalize fully transparent colours
+        else
+        {
+          uint8_t r = (((col & 0xff0000U) >> 16) * 255 + alpha / 2) / alpha;
+          uint8_t g = (((col & 0x00ff00U) >> 8) * 255 + alpha / 2) / alpha;
+          uint8_t b = (((col & 0x0000ffU) >> 0) * 255 + alpha / 2) / alpha;
+          row[x] = (alpha << 24) | (b << 16) | (g << 8) | r;
+        }
       }
     }
 
