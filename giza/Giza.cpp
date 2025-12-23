@@ -127,8 +127,14 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image, std::string &buff
     uint8_t *output = nullptr;
     size_t sz = WebPEncodeLosslessRGBA(data, width, height, stride, &output);
 
-    if (sz && output)
-      buffer.append(reinterpret_cast<const char *>(output), sz);
+    try
+    {
+      if (sz && output)
+        buffer.append(reinterpret_cast<const char *>(output), sz);
+    }
+    catch (...)
+    {
+    }
 
     free(output);
   }
@@ -137,6 +143,63 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image, std::string &buff
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+
+uint* giza_surface_write_to_argb(cairo_surface_t *image)
+{
+  try
+  {
+    cairo_surface_flush(image);
+
+    if (cairo_image_surface_get_format(image) != CAIRO_FORMAT_ARGB32)
+      throw Fmi::Exception(BCP, "Giza::toargb can write only Cairo ARGB32 format images");
+
+    // Access image data directly.
+    unsigned char *data = cairo_image_surface_get_data(image);
+
+    if (data == nullptr)
+      throw Fmi::Exception(BCP, "Attempt to render an invalid Cairo image as ARGB");
+
+    // The cairo image data may have a stride width, meaning once you have
+    // passed a certain width you may have to skip more bytes to reach the next
+    // row. Hence the position of the next row is calculated using the stride,
+    // and not the width.
+
+    int width = cairo_image_surface_get_width(image);
+    int height = cairo_image_surface_get_height(image);
+    int stride = cairo_image_surface_get_stride(image);
+
+    // Converting ARGB32 and unpremultiplying by alpha
+
+    uint sz = width * height;
+    if (sz == 0)
+      throw Fmi::Exception(BCP, "Cairo image size is zero.");
+
+    uint *output = new uint[sz];
+
+    uint c = 0;
+    uint nz = 0;
+    for (int i = 0; i < height; i++)
+    {
+      uint *row = (uint *)(data + i * stride);
+      for (int x = 0; x < width; x++)
+      {
+        uint col = row[x];
+        if (col & 0xFF000000)
+          nz++;
+
+        output[c] = col;
+        c++;
+      }
+    }
+    return output;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 
 void giza_surface_write_to_png_string(cairo_surface_t *image,
                                       const ColorMapper &mapper,
@@ -430,5 +493,51 @@ std::string topng(cairo_surface_t *image, const ColorMapOptions &options)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Write cairo surface to a ARGB image. The caller must release it.
+ */
+// ----------------------------------------------------------------------
+
+uint* toargb(cairo_surface_t *image)
+{
+  try
+  {
+    //ColorMapper mapper;
+    //mapper.reduce(image);
+
+    return giza_surface_write_to_argb(image);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Write cairo surface to a ARGB image. The caller must release it.
+ */
+// ----------------------------------------------------------------------
+
+uint* toargb(cairo_surface_t *image, const ColorMapOptions &options)
+{
+  try
+  {
+    //ColorMapper mapper;
+    //mapper.options(options);
+    //mapper.reduce(image);
+
+    return giza_surface_write_to_argb(image);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 
 }  // namespace Giza
