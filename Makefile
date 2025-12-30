@@ -3,7 +3,7 @@ LIB = smartmet-$(SUBNAME)
 SPEC = smartmet-library-$(SUBNAME)
 INCDIR = smartmet/$(SUBNAME)
 
-REQUIRES = librsvg cairo
+REQUIRES = librsvg cairo webp
 
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 # Compiler options
@@ -17,11 +17,7 @@ ifneq ($(VERSION_ID),)
 DEFINES += -DVERSION_ID=$(VERSION_ID)
 endif
 
-LIBS += -L$(libdir) \
- -lsmartmet-macgyver \
- -lwebp \
-	$(LIBRSVG_LIBS) \
-	$(CAIRO_LIBS)
+LIBS += -L$(libdir) -lsmartmet-macgyver $(REQUIRED_LIBS)
 
 # What to install
 
