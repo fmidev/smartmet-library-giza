@@ -1,6 +1,6 @@
 PROG = $(patsubst %.cpp,%,$(wildcard *Test.cpp))
 
-REQUIRES := librsvg cairo
+REQUIRES := librsvg cairo webp fmt
 
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
@@ -8,8 +8,6 @@ INCLUDES += -I ../giza
 
 LIBS += ../libsmartmet-giza.so \
 	-lsmartmet-macgyver \
-	-lfmt \
-	-lwebp \
 	$(REQUIRED_LIBS)
 
 CFLAGS += $(shell pkg-config --cflags Magick++)

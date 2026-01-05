@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 25.12.30
+Version: 26.1.5
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -25,18 +25,18 @@ BuildRequires: smartmet-library-macgyver-devel >= 25.12.2
 BuildRequires: librsvg2-devel >= 2.40.6
 Requires: librsvg2 >= 2.40.6
 BuildRequires: cairo-devel
-BuildRequires: libwebp-devel
+BuildRequires: libwebp13-devel
 Requires: cairo
-Requires: libwebp
+Requires: libwebp13
 Requires: smartmet-library-macgyver >= 25.12.2
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: fmt-devel
 #TestRequires: cairo-devel
-#TestRequires: libwebp-devel
+#TestRequires: libwebp13-devel
 %if 0%{?rhel} && 0%{rhel} < 8
-#TestRequires: libwebp-tools
+#TestRequires: libwebp13-tools
 %endif
 #TestRequires: %{smartmet_boost}-devel
 #TestRequires: gcc-c++
@@ -88,6 +88,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Mon Jan  5 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.1.5-1.fmi
+- Use webp13 instead of webp
+
 * Tue Dec 30 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.12.30-1.fmi
 - Fixed webp linkage
 
