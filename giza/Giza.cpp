@@ -144,8 +144,7 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image, std::string &buff
   }
 }
 
-
-uint* giza_surface_write_to_argb(cairo_surface_t *image)
+uint *giza_surface_write_to_argb(cairo_surface_t *image)
 {
   try
   {
@@ -178,15 +177,15 @@ uint* giza_surface_write_to_argb(cairo_surface_t *image)
     uint *output = new uint[sz];
 
     uint c = 0;
-    uint nz = 0;
+    // uint nz = 0;
     for (int i = 0; i < height; i++)
     {
       uint *row = (uint *)(data + i * stride);
       for (int x = 0; x < width; x++)
       {
         uint col = row[x];
-        if (col & 0xFF000000)
-          nz++;
+        // if (col & 0xFF000000)
+        //    nz++;
 
         output[c] = col;
         c++;
@@ -199,7 +198,6 @@ uint* giza_surface_write_to_argb(cairo_surface_t *image)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
-
 
 void giza_surface_write_to_png_string(cairo_surface_t *image,
                                       const ColorMapper &mapper,
@@ -494,20 +492,18 @@ std::string topng(cairo_surface_t *image, const ColorMapOptions &options)
   }
 }
 
-
-
 // ----------------------------------------------------------------------
 /*!
  * \brief Write cairo surface to a ARGB image. The caller must release it.
  */
 // ----------------------------------------------------------------------
 
-uint* toargb(cairo_surface_t *image)
+uint *toargb(cairo_surface_t *image)
 {
   try
   {
-    //ColorMapper mapper;
-    //mapper.reduce(image);
+    // ColorMapper mapper;
+    // mapper.reduce(image);
 
     return giza_surface_write_to_argb(image);
   }
@@ -523,13 +519,13 @@ uint* toargb(cairo_surface_t *image)
  */
 // ----------------------------------------------------------------------
 
-uint* toargb(cairo_surface_t *image, const ColorMapOptions &options)
+uint *toargb(cairo_surface_t *image, const ColorMapOptions & /* options */)
 {
   try
   {
-    //ColorMapper mapper;
-    //mapper.options(options);
-    //mapper.reduce(image);
+    // ColorMapper mapper;
+    // mapper.options(options);
+    // mapper.reduce(image);
 
     return giza_surface_write_to_argb(image);
   }
@@ -538,6 +534,5 @@ uint* toargb(cairo_surface_t *image, const ColorMapOptions &options)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
-
 
 }  // namespace Giza
