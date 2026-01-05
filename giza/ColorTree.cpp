@@ -5,6 +5,12 @@
 #include <cassert>
 #include <cmath>
 
+namespace Giza
+{
+
+namespace
+{
+
 /*
  * double gamma = 2.2f;
  * double coeff = 255/(pow(255.,gamma));
@@ -269,8 +275,6 @@ std::array<double, 256> gammacorrections = {0,
                                             252.8051751162,
                                             255};
 
-namespace Giza
-{
 // ----------------------------------------------------------------------
 /*!
  * \brief Return the gamma correction
@@ -299,6 +303,8 @@ inline static double colordiff(double x, double y, double a)
   return b * b + w * w;
 }
 #endif
+
+}  // namespace
 
 double ColorTree::distance(Color color1, Color color2)
 {

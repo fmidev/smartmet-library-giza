@@ -8,6 +8,9 @@
 #include <cairo/cairo.h>
 #include <librsvg/rsvg.h>
 
+namespace
+{
+
 // Note: In RHEL6 fontconfig, pango, cairo combination was not thread safe
 // The problem was fixed in RHEL7.
 
@@ -88,6 +91,7 @@ std::string svg_to_pdf_or_ps(const std::string &svg, bool ispdf)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 
@@ -235,15 +239,13 @@ std::string topng(const std::string &svg, const ColorMapOptions &options)
   }
 }
 
-
-
 // ----------------------------------------------------------------------
 /*!
  * \brief Convert SVG to PNG in memory
  */
 // ----------------------------------------------------------------------
 
-uint* toargb(const std::string &svg)
+uint *toargb(const std::string &svg)
 {
   try
   {
@@ -262,7 +264,7 @@ uint* toargb(const std::string &svg)
  */
 // ----------------------------------------------------------------------
 
-uint* toargb(const std::string &svg, const ColorMapOptions &options)
+uint *toargb(const std::string &svg, const ColorMapOptions &options)
 {
   try
   {
@@ -294,7 +296,7 @@ uint* toargb(const std::string &svg, const ColorMapOptions &options)
 
     g_object_unref(handle);  // Deprecated: rsvg_handle_free(handle);
 
-    uint* buffer = Giza::toargb(image, options);
+    uint *buffer = Giza::toargb(image, options);
 
     cairo_surface_destroy(image);
     cairo_destroy(cr);
@@ -306,7 +308,6 @@ uint* toargb(const std::string &svg, const ColorMapOptions &options)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
-
 
 // ----------------------------------------------------------------------
 /*!

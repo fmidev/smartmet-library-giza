@@ -11,6 +11,10 @@
 
 namespace Giza
 {
+
+namespace
+{
+
 // ----------------------------------------------------------------------
 /*
  * Helper classes
@@ -387,6 +391,8 @@ ColorHistogram colorhistogram(cairo_surface_t *image)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
