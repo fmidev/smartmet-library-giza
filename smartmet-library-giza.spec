@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 26.3.13
+Version: 26.4.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
