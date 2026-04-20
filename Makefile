@@ -91,6 +91,8 @@ obj/%.o : %.cpp
 	@mkdir -p $(objdir)
 	$(CXX) $(CFLAGS) $(INCLUDES) -c -MD -MF $(patsubst obj/%.o, obj/%.d, $@) -MT $@ -o $@ $<
 
+obj/Svg.o: CFLAGS += -Wno-deprecated-declarations
+
 ifneq ($(wildcard obj/*.d),)
 -include $(wildcard obj/*.d)
 endif
