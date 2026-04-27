@@ -6,6 +6,7 @@
 #include <cairo/cairo-pdf.h>
 #include <cairo/cairo-ps.h>
 #include <cairo/cairo.h>
+#include <gio/gio.h>
 #include <librsvg/rsvg.h>
 
 namespace
@@ -13,6 +14,29 @@ namespace
 
 // Note: In RHEL6 fontconfig, pango, cairo combination was not thread safe
 // The problem was fixed in RHEL7.
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Create an RsvgHandle from an in-memory SVG string
+ *
+ * Uses RSVG_HANDLE_FLAG_UNLIMITED so libxml2's 10/20 MB safety limits
+ * do not reject large SVG inputs.
+ */
+// ----------------------------------------------------------------------
+
+RsvgHandle *make_rsvg_handle(const std::string &svg)
+{
+  const auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
+  GInputStream *stream = g_memory_input_stream_new_from_data(indata, svg.size(), nullptr);
+  RsvgHandle *handle = rsvg_handle_new_from_stream_sync(
+      stream, nullptr, RSVG_HANDLE_FLAG_UNLIMITED, nullptr, nullptr);
+  g_object_unref(stream);
+
+  if (handle == nullptr)
+    throw Fmi::Exception(BCP, "Failed to get rsvg handle on the SVG data");
+
+  return handle;
+}
 
 // ----------------------------------------------------------------------
 /*!
@@ -48,19 +72,7 @@ std::string svg_to_pdf_or_ps(const std::string &svg, bool ispdf)
   {
     cairo_surface_t *image = nullptr;
     cairo_t *cr = nullptr;
-    RsvgHandle *handle = nullptr;
-
-    const auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
-
-#if defined(VERSION_ID) && VERSION_ID < 8
-    handle = rsvg_handle_new_from_data_with_flags(
-        indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
-#else
-    handle = rsvg_handle_new_from_data(indata, svg.size(), nullptr);
-#endif
-
-    if (handle == nullptr)
-      throw Fmi::Exception(BCP, "Failed to get rsvg handle on the SVG data");
+    RsvgHandle *handle = make_rsvg_handle(svg);
 
     RsvgDimensionData dimensions;
     rsvg_handle_get_dimensions(handle, &dimensions);
@@ -130,22 +142,10 @@ std::string towebp(const std::string &svg, const ColorMapOptions &options)
   {
     cairo_surface_t *image = nullptr;
     cairo_t *cr = nullptr;
-    RsvgHandle *handle = nullptr;
+    RsvgHandle *handle = make_rsvg_handle(svg);
 
     {
       // BrainStorm::WriteLock lock(globalPngMutex);
-
-      const auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
-
-#if defined(VERSION_ID) && VERSION_ID < 8
-      handle = rsvg_handle_new_from_data_with_flags(
-          indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
-#else
-      handle = rsvg_handle_new_from_data(indata, svg.size(), nullptr);
-#endif
-
-      if (handle == nullptr)
-        throw Fmi::Exception(BCP, "Failed to get rsvg handle on the SVG data");
 
       RsvgDimensionData dimensions;
       rsvg_handle_get_dimensions(handle, &dimensions);
@@ -200,22 +200,10 @@ std::string topng(const std::string &svg, const ColorMapOptions &options)
   {
     cairo_surface_t *image = nullptr;
     cairo_t *cr = nullptr;
-    RsvgHandle *handle = nullptr;
+    RsvgHandle *handle = make_rsvg_handle(svg);
 
     {
       // BrainStorm::WriteLock lock(globalPngMutex);
-
-      const auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
-
-#if defined(VERSION_ID) && VERSION_ID < 8
-      handle = rsvg_handle_new_from_data_with_flags(
-          indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
-#else
-      handle = rsvg_handle_new_from_data(indata, svg.size(), nullptr);
-#endif
-
-      if (handle == nullptr)
-        throw Fmi::Exception(BCP, "Failed to get rsvg handle on the SVG data");
 
       RsvgDimensionData dimensions;
       rsvg_handle_get_dimensions(handle, &dimensions);
@@ -270,22 +258,10 @@ uint *toargb(const std::string &svg, const ColorMapOptions &options)
   {
     cairo_surface_t *image = nullptr;
     cairo_t *cr = nullptr;
-    RsvgHandle *handle = nullptr;
+    RsvgHandle *handle = make_rsvg_handle(svg);
 
     {
       // BrainStorm::WriteLock lock(globalPngMutex);
-
-      const auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
-
-#if defined(VERSION_ID) && VERSION_ID < 8
-      handle = rsvg_handle_new_from_data_with_flags(
-          indata, svg.size(), RSVG_HANDLE_FLAG_UNLIMITED, nullptr);
-#else
-      handle = rsvg_handle_new_from_data(indata, svg.size(), nullptr);
-#endif
-
-      if (handle == nullptr)
-        throw Fmi::Exception(BCP, "Failed to get rsvg handle on the SVG data");
 
       RsvgDimensionData dimensions;
       rsvg_handle_get_dimensions(handle, &dimensions);

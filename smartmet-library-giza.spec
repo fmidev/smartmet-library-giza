@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 26.4.13
+Version: 26.4.27
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -88,6 +88,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Mon Apr 27 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.4.27-1.fmi
+- Bypass libxml2's 20 MB SVG size limit by using rsvg_handle_new_from_stream_sync with RSVG_HANDLE_FLAG_UNLIMITED on all RHEL versions
+
 * Mon Apr 13 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.4.13-1.fmi
 - Repackaged due to API changes
 
