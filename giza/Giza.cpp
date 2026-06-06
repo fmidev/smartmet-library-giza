@@ -1,8 +1,10 @@
 #include "Giza.h"
 #include "ColorMapper.h"
+#include "WebpOptions.h"
 #include <cairo/cairo.h>
 #include <macgyver/Exception.h>
 #include <webp/encode.h>
+#include <algorithm>
 #include <cstring>
 #include <map>
 #include <png.h>
@@ -79,7 +81,9 @@ void append_to_string(png_structp png, png_bytep data, png_size_t length)
   }
 }
 
-void giza_surface_write_to_webp_string(cairo_surface_t *image, std::string &buffer)
+void giza_surface_write_to_webp_string(cairo_surface_t *image,
+                                       std::string &buffer,
+                                       const WebpOptions &options)
 {
   try
   {
@@ -124,19 +128,71 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image, std::string &buff
       }
     }
 
-    uint8_t *output = nullptr;
-    size_t sz = WebPEncodeLosslessRGBA(data, width, height, stride, &output);
-
-    try
+    if (options.level < 0)
     {
-      if (sz && output)
-        buffer.append(reinterpret_cast<const char *>(output), sz);
-    }
-    catch (...)
-    {
-    }
+      // Default: use libwebp's simple lossless API (historical behaviour)
+      uint8_t *output = nullptr;
+      size_t sz = WebPEncodeLosslessRGBA(data, width, height, stride, &output);
 
-    free(output);
+      try
+      {
+        if (sz && output)
+          buffer.append(reinterpret_cast<const char *>(output), sz);
+      }
+      catch (...)
+      {
+      }
+
+      free(output);
+    }
+    else
+    {
+      // Explicit speed control: use the advanced API so the lossless preset
+      // level (0 = fastest/largest ... 9 = slowest/smallest) takes effect.
+      WebPConfig config;
+      if (!WebPConfigInit(&config))
+        throw Fmi::Exception(BCP, "Failed to initialize libwebp configuration");
+      config.lossless = 1;
+      if (!WebPConfigLosslessPreset(&config, std::clamp(options.level, 0, 9)))
+        throw Fmi::Exception(BCP, "Invalid libwebp lossless preset level");
+      if (!WebPValidateConfig(&config))
+        throw Fmi::Exception(BCP, "Invalid libwebp configuration");
+
+      WebPPicture pic;
+      if (!WebPPictureInit(&pic))
+        throw Fmi::Exception(BCP, "Failed to initialize libwebp picture");
+      pic.use_argb = 1;
+      pic.width = width;
+      pic.height = height;
+
+      WebPMemoryWriter writer;
+      WebPMemoryWriterInit(&writer);
+      pic.writer = WebPMemoryWrite;
+      pic.custom_ptr = &writer;
+
+      try
+      {
+        // The pixel data is already in RGBA byte order (see the unpremultiply
+        // loop above), matching what WebPEncodeLosslessRGBA expects.
+        if (!WebPPictureImportRGBA(&pic, data, stride))
+          throw Fmi::Exception(BCP, "Failed to import image into libwebp picture");
+
+        if (!WebPEncode(&config, &pic))
+          throw Fmi::Exception(BCP, "libwebp encoding failed")
+              .addParameter("error_code", std::to_string(pic.error_code));
+
+        buffer.append(reinterpret_cast<const char *>(writer.mem), writer.size);
+      }
+      catch (...)
+      {
+        WebPMemoryWriterClear(&writer);
+        WebPPictureFree(&pic);
+        throw;
+      }
+
+      WebPMemoryWriterClear(&writer);
+      WebPPictureFree(&pic);
+    }
   }
   catch (...)
   {
@@ -412,7 +468,7 @@ std::string towebp(cairo_surface_t *image)
     mapper.reduce(image);
 
     std::string buffer;
-    giza_surface_write_to_webp_string(image, buffer);
+    giza_surface_write_to_webp_string(image, buffer, WebpOptions());
     return buffer;
   }
   catch (...)
@@ -431,12 +487,32 @@ std::string towebp(cairo_surface_t *image, const ColorMapOptions &options)
 {
   try
   {
+    return towebp(image, options, WebpOptions());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Write cairo surface to a WEBP string with explicit encoder options
+ */
+// ----------------------------------------------------------------------
+
+std::string towebp(cairo_surface_t *image,
+                   const ColorMapOptions &options,
+                   const WebpOptions &webpOptions)
+{
+  try
+  {
     ColorMapper mapper;
     mapper.options(options);
     mapper.reduce(image);
 
     std::string buffer;
-    giza_surface_write_to_webp_string(image, buffer);
+    giza_surface_write_to_webp_string(image, buffer, webpOptions);
     return buffer;
   }
   catch (...)

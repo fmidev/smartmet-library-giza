@@ -1,11 +1,13 @@
+#include "ColorMapOptions.h"
 #include "Svg.h"
-#include <filesystem>
+#include "WebpOptions.h"
+#include <boost/functional/hash.hpp>
 #include <fmt/format.h>
 #include <macgyver/StringConversion.h>
 #include <regression/tframe.h>
-#include <fstream>
-#include <boost/functional/hash.hpp>
 #include <Magick++.h>
+#include <filesystem>
+#include <fstream>
 
 using namespace std;
 
@@ -40,7 +42,7 @@ std::string convert_exe()
 {
   if (access("/usr/bin/magick", X_OK) == 0)
     return "/usr/bin/magick";
-  return "convert"; // Assuming 'convert' is in the PATH
+  return "convert";  // Assuming 'convert' is in the PATH
 }
 
 double imagedifference(const std::string& file1, const std::string& file2)
@@ -49,38 +51,47 @@ double imagedifference(const std::string& file1, const std::string& file2)
   Magick::Image image2(file2);
 
   // Ensure both images are the same size
-  if (image1.size() != image2.size()) {
-      throw std::runtime_error("Images are not the same size: " + file1 + " and " + file2);
+  if (image1.size() != image2.size())
+  {
+    throw std::runtime_error("Images are not the same size: " + file1 + " and " + file2);
   }
 
   const double mse = image1.compare(image2, Magick::MetricType::MeanSquaredErrorMetric);
-  const double psnr = (mse == 0)
-    ? std::numeric_limits<double>::infinity()
-    : 20 * log10(1.0 / sqrt(mse));
+  const double psnr =
+      (mse == 0) ? std::numeric_limits<double>::infinity() : 20 * log10(1.0 / sqrt(mse));
 
   return psnr;
 }
 
-bool checkimage(const std::string& output, const std::string& expected, double error_limit_ = error_limit)
+bool checkimage(const std::string& output,
+                const std::string& expected,
+                double error_limit_ = error_limit)
 {
-    if (filehash(output) == filehash(expected)) {
-        return true;
-    } else {
-        double psnr = imagedifference(output, expected);
-        if (std::isinf(psnr)) {
-            return true;
-        }
-
-        std::string diff_fn = output.substr(0, output.length() - 4) + ".difference.png";
-        auto cmd = fmt::format("/bin/sh -c '( composite {} {} -compose DIFFERENCE png:- |"
-            "{} -quiet - -contrast-stretch 0 {} )'",
-            expected, output, convert_exe(), diff_fn);
-        system(cmd.c_str());
-        comp_results << " PSNR(" << output << ", " << expected << ") = " << psnr << "\n";
-        return psnr > error_limit_;
+  if (filehash(output) == filehash(expected))
+  {
+    return true;
+  }
+  else
+  {
+    double psnr = imagedifference(output, expected);
+    if (std::isinf(psnr))
+    {
+      return true;
     }
-}
 
+    std::string diff_fn = output.substr(0, output.length() - 4) + ".difference.png";
+    auto cmd = fmt::format(
+        "/bin/sh -c '( composite {} {} -compose DIFFERENCE png:- |"
+        "{} -quiet - -contrast-stretch 0 {} )'",
+        expected,
+        output,
+        convert_exe(),
+        diff_fn);
+    system(cmd.c_str());
+    comp_results << " PSNR(" << output << ", " << expected << ") = " << psnr << "\n";
+    return psnr > error_limit_;
+  }
+}
 
 namespace Tests
 {
@@ -176,6 +187,53 @@ void towebp_transparent_symbols()
       TEST_FAILED("Imaqes " + outfile + " and " + testfile + " difference is too large ");
     std::filesystem::remove(testfile);
   }
+
+  TEST_PASSED();
+}
+
+// ----------------------------------------------------------------------
+
+void towebp_compression_level()
+{
+  // The lossless preset level must affect the encoded size while leaving the
+  // decoded image unchanged (WebP lossless). svg1 has enough detail that the
+  // fastest and slowest presets produce differently sized output.
+
+  std::string infile = "input/svg1.svg";
+  std::string svg = readfile(infile);
+
+  Giza::ColorMapOptions colors;
+
+  Giza::WebpOptions fast;
+  fast.level = 0;  // fastest, largest
+  Giza::WebpOptions best;
+  best.level = 9;  // slowest, smallest
+
+  std::string fast_data = Giza::Svg::towebp(svg, colors, fast);
+  std::string best_data = Giza::Svg::towebp(svg, colors, best);
+
+  if (fast_data.empty() || best_data.empty())
+    TEST_FAILED("WebP encoding produced empty output");
+
+  if (best_data.size() >= fast_data.size())
+    TEST_FAILED(fmt::format("Expected level 9 ({} bytes) to be smaller than level 0 ({} bytes)",
+                            best_data.size(),
+                            fast_data.size()));
+
+  // Both must decode to the same image as the unparameterised reference output.
+  std::string reffile = "output/webp_svg1.webp";
+
+  std::string fast_fn = "failures/webp_svg1_level0.webp";
+  writefile(fast_fn, fast_data);
+  if (!checkimage(fast_fn, reffile, 25.0))
+    TEST_FAILED("Level 0 WebP differs too much from reference " + reffile);
+  std::filesystem::remove(fast_fn);
+
+  std::string best_fn = "failures/webp_svg1_level9.webp";
+  writefile(best_fn, best_data);
+  if (!checkimage(best_fn, reffile, 25.0))
+    TEST_FAILED("Level 9 WebP differs too much from reference " + reffile);
+  std::filesystem::remove(best_fn);
 
   TEST_PASSED();
 }
@@ -293,6 +351,7 @@ class tests : public tframe::tests
     TEST(towebp);
     TEST(towebp_transparency);
     TEST(towebp_transparent_symbols);
+    TEST(towebp_compression_level);
 
     // TEST(tops);	// CreationDate changes every time!
   }
@@ -306,8 +365,9 @@ int main(void)
   cout << endl << "Svg tester" << endl << "==========" << endl;
   Tests::tests t;
   const auto retval = t.run();
-  if (comp_results.str() != "") {
-      std::cout << std::endl << comp_results.str() << std::endl;
+  if (comp_results.str() != "")
+  {
+    std::cout << std::endl << comp_results.str() << std::endl;
   }
   return retval;
 }

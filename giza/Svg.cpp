@@ -1,6 +1,7 @@
 #include "Svg.h"
 #include "ColorMapper.h"
 #include "Giza.h"
+#include "WebpOptions.h"
 #include <macgyver/Exception.h>
 
 #include <cairo/cairo-pdf.h>
@@ -140,6 +141,26 @@ std::string towebp(const std::string &svg, const ColorMapOptions &options)
 {
   try
   {
+    return towebp(svg, options, WebpOptions());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Convert SVG to WEBP in memory with explicit encoder options
+ */
+// ----------------------------------------------------------------------
+
+std::string towebp(const std::string &svg,
+                   const ColorMapOptions &options,
+                   const WebpOptions &webpOptions)
+{
+  try
+  {
     cairo_surface_t *image = nullptr;
     cairo_t *cr = nullptr;
     RsvgHandle *handle = make_rsvg_handle(svg);
@@ -156,7 +177,7 @@ std::string towebp(const std::string &svg, const ColorMapOptions &options)
 
     g_object_unref(handle);  // Deprecated: rsvg_handle_free(handle);
 
-    std::string buffer = Giza::towebp(image, options);
+    std::string buffer = Giza::towebp(image, options, webpOptions);
 
     cairo_surface_destroy(image);
     cairo_destroy(cr);
