@@ -192,6 +192,66 @@ std::string towebp(const std::string &svg,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Render SVG frames and convert to an animated WEBP in memory
+ */
+// ----------------------------------------------------------------------
+
+std::string towebpanim(const std::vector<std::string> &svgs,
+                       const std::vector<int> &durations,
+                       int loop_count,
+                       const ColorMapOptions &options,
+                       const WebpOptions &webpOptions)
+{
+  try
+  {
+    std::vector<cairo_surface_t *> frames;
+    std::vector<cairo_t *> contexts;
+
+    auto cleanup = [&frames, &contexts]()
+    {
+      for (auto *image : frames)
+        cairo_surface_destroy(image);
+      for (auto *cr : contexts)
+        cairo_destroy(cr);
+    };
+
+    try
+    {
+      for (const auto &svg : svgs)
+      {
+        RsvgHandle *handle = make_rsvg_handle(svg);
+
+        RsvgDimensionData dimensions;
+        rsvg_handle_get_dimensions(handle, &dimensions);
+        cairo_surface_t *image =
+            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, dimensions.width, dimensions.height);
+        frames.push_back(image);
+        cairo_t *cr = cairo_create(image);
+        contexts.push_back(cr);
+        rsvg_handle_render_cairo(handle, cr);
+
+        g_object_unref(handle);
+      }
+
+      std::string buffer = Giza::towebpanim(frames, durations, loop_count, options, webpOptions);
+
+      cleanup();
+      return buffer;
+    }
+    catch (...)
+    {
+      cleanup();
+      throw;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Convert SVG to PNG in memory
  */
 // ----------------------------------------------------------------------
