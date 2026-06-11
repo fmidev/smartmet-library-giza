@@ -299,6 +299,12 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
 
     png_set_write_fn(png, &buffer, append_to_string, nullptr);
 
+    // Speed over size: no filtering, and compression level 3 avoids deflate_slow
+    // while still compressing reasonably well.
+
+    png_set_filter(png, 0, PNG_FILTER_NONE);
+    png_set_compression_level(png, 3);
+
     // Determine the unique colours in the colour conversion map, and
     // set true colour mode if there are more than 256 colours.
 

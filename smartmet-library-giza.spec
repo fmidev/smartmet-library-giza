@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 26.6.6
+Version: 26.6.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -88,6 +88,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Thu Jun 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.6.11-1.fmi
+- Faster PNG encoding: disable filtering (PNG_FILTER_NONE) and use zlib compression level 3 to avoid deflate_slow
+
 * Sat Jun  6 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.6.6-1.fmi
 - Added WebpOptions for controlling WebP lossless compression speed via a preset level (0=fastest...9=smallest)
 
