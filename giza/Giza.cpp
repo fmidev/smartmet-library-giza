@@ -90,7 +90,7 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image,
     cairo_surface_flush(image);
 
     if (cairo_image_surface_get_format(image) != CAIRO_FORMAT_ARGB32)
-      throw Fmi::Exception(BCP, "Giza::topng can write only Cairo ARGB32 format images");
+      throw Fmi::Exception(BCP, "Giza::towebp can write only Cairo ARGB32 format images");
 
     // Access image data directly.
     unsigned char *data = cairo_image_surface_get_data(image);
