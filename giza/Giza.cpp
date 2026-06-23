@@ -5,7 +5,10 @@
 #include <macgyver/Exception.h>
 #include <webp/encode.h>
 #include <algorithm>
+#include <cstdint>
+#include <cstdlib>
 #include <cstring>
+#include <libdeflate.h>
 #include <map>
 #include <png.h>
 #include <set>
@@ -255,9 +258,193 @@ uint *giza_surface_write_to_argb(cairo_surface_t *image)
   }
 }
 
-void giza_surface_write_to_png_string(cairo_surface_t *image,
-                                      const ColorMapper &mapper,
-                                      std::string &buffer)
+// --- Minimal PNG container writer compressing IDAT with libdeflate ---------------------
+//
+// giza always writes unfiltered scanlines (PNG_FILTER_NONE), so the IDAT input is simply a
+// 0x00 filter byte followed by the raw row bytes per row. PNG's IDAT payload is a zlib
+// datastream, which is exactly what libdeflate_zlib_compress() produces, and PNG chunk CRCs
+// are the standard CRC-32 that libdeflate_crc32() computes. This lets us bypass libpng (and
+// its streaming zlib) and use libdeflate's faster one-shot compressor.
+
+void put_be32(std::string &out, uint32_t value)
+{
+  out.push_back(static_cast<char>((value >> 24) & 0xff));
+  out.push_back(static_cast<char>((value >> 16) & 0xff));
+  out.push_back(static_cast<char>((value >> 8) & 0xff));
+  out.push_back(static_cast<char>(value & 0xff));
+}
+
+// Append a PNG chunk: length, 4-byte type, data, CRC-32 over (type + data).
+void png_chunk(std::string &out, const char *type, const uint8_t *data, size_t len)
+{
+  put_be32(out, static_cast<uint32_t>(len));
+  const size_t crc_begin = out.size();
+  out.append(type, 4);
+  if (len > 0)
+    out.append(reinterpret_cast<const char *>(data), len);
+  const auto crc = libdeflate_crc32(0, out.data() + crc_begin, 4 + len);
+  put_be32(out, crc);
+}
+
+// libdeflate compression level (1..12). Default 1 favors speed (as the previous zlib level 3
+// did) while still producing slightly smaller output than zlib level 3, and is measurably
+// faster. Overridable via GIZA_PNG_LEVEL for benchmarking or when smaller files are preferred.
+int libdeflate_level()
+{
+  if (const char *env = std::getenv("GIZA_PNG_LEVEL"))
+  {
+    const int level = std::atoi(env);
+    if (level >= 1 && level <= 12)
+      return level;
+  }
+  return 1;
+}
+
+void write_png_libdeflate(cairo_surface_t *image, const ColorMapper &mapper, std::string &buffer)
+{
+  try
+  {
+    cairo_surface_flush(image);
+
+    if (cairo_image_surface_get_format(image) != CAIRO_FORMAT_ARGB32)
+      throw Fmi::Exception(BCP, "Giza::topng can write only Cairo ARGB32 format images");
+
+    unsigned char *data = cairo_image_surface_get_data(image);
+    if (data == nullptr)
+      throw Fmi::Exception(BCP, "Attempt to render an invalid Cairo image as PNG");
+
+    const int width = cairo_image_surface_get_width(image);
+    const int height = cairo_image_surface_get_height(image);
+    const int stride = cairo_image_surface_get_stride(image);
+
+    // Same truecolor-vs-palette decision as the libpng path
+    const auto &colormap = mapper.colormap();
+    std::set<Color> unique_colors;
+    if (!mapper.trueColor())
+      for (const ColorMap::value_type &from_to : colormap)
+        unique_colors.insert(from_to.second);
+
+    const bool truecolor = (mapper.trueColor() || unique_colors.size() > 256);
+
+    // Build the raw (unfiltered) scanline buffer and, for palette mode, the palette tables.
+    std::string raw;
+    std::vector<uint8_t> plte;  // RGB triplets
+    std::vector<uint8_t> trns;  // leading transparent alphas
+
+    if (truecolor)
+    {
+      const size_t rowbytes = static_cast<size_t>(width) * 4;
+      raw.resize(static_cast<size_t>(height) * (1 + rowbytes));
+      auto *out = reinterpret_cast<uint8_t *>(raw.data());
+      for (int i = 0; i < height; i++)
+      {
+        const auto *row = data + static_cast<size_t>(i) * stride;
+        *out++ = 0;  // PNG_FILTER_NONE
+        for (int j = 0; j < width; j++)
+        {
+          uint32_t pixel;
+          std::memcpy(&pixel, row + j * 4, sizeof(pixel));
+          const uint8_t a = (pixel & 0xff000000U) >> 24;
+          if (a == 0)
+          {
+            out[0] = out[1] = out[2] = out[3] = 0;  // normalize fully transparent pixels
+          }
+          else
+          {
+            out[0] = (((pixel & 0xff0000U) >> 16) * 255 + a / 2) / a;
+            out[1] = (((pixel & 0x00ff00U) >> 8) * 255 + a / 2) / a;
+            out[2] = (((pixel & 0x0000ffU) >> 0) * 255 + a / 2) / a;
+            out[3] = a;
+          }
+          out += 4;
+        }
+      }
+    }
+    else
+    {
+      // Assign palette indices in the (alpha-ascending) order of the color set, exactly as the
+      // libpng path, so transparent colors come first and tRNS stays minimal.
+      std::map<Color, int> color_indices;
+      int num_transparent = 0;
+      for (const Color color : unique_colors)
+      {
+        const int idx = static_cast<int>(color_indices.size());
+        color_indices.insert(std::make_pair(color, idx));
+        const auto a = alpha(color);
+        plte.push_back(unpremultiply_color_component(red(color), a));
+        plte.push_back(unpremultiply_color_component(green(color), a));
+        plte.push_back(unpremultiply_color_component(blue(color), a));
+        trns.push_back(a);
+        if (a < 255)
+          num_transparent = idx + 1;
+      }
+      trns.resize(num_transparent);  // keep only the leading transparent entries
+
+      const size_t rowbytes = static_cast<size_t>(width);
+      raw.resize(static_cast<size_t>(height) * (1 + rowbytes));
+      auto *out = reinterpret_cast<uint8_t *>(raw.data());
+      for (int i = 0; i < height; i++)
+      {
+        const auto *row = data + static_cast<size_t>(i) * stride;
+        *out++ = 0;  // PNG_FILTER_NONE
+        for (int j = 0; j < width; j++)
+        {
+          Color c = *reinterpret_cast<const Color *>(row + j * 4);
+          *out++ = static_cast<uint8_t>(color_indices.at(c));
+        }
+      }
+    }
+
+    // Compress the scanlines into the IDAT zlib datastream
+    auto *compressor = libdeflate_alloc_compressor(libdeflate_level());
+    if (compressor == nullptr)
+      throw Fmi::Exception(BCP, "Failed to allocate libdeflate compressor");
+
+    const size_t bound = libdeflate_zlib_compress_bound(compressor, raw.size());
+    std::vector<uint8_t> idat(bound);
+    const size_t idat_size =
+        libdeflate_zlib_compress(compressor, raw.data(), raw.size(), idat.data(), bound);
+    libdeflate_free_compressor(compressor);
+    if (idat_size == 0)
+      throw Fmi::Exception(BCP, "libdeflate failed to compress PNG image data");
+
+    // Emit the PNG datastream
+    static const uint8_t signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+    buffer.append(reinterpret_cast<const char *>(signature), sizeof(signature));
+
+    uint8_t ihdr[13];
+    ihdr[0] = (width >> 24) & 0xff;
+    ihdr[1] = (width >> 16) & 0xff;
+    ihdr[2] = (width >> 8) & 0xff;
+    ihdr[3] = width & 0xff;
+    ihdr[4] = (height >> 24) & 0xff;
+    ihdr[5] = (height >> 16) & 0xff;
+    ihdr[6] = (height >> 8) & 0xff;
+    ihdr[7] = height & 0xff;
+    ihdr[8] = 8;                     // bit depth
+    ihdr[9] = truecolor ? 6 : 3;     // color type: RGBA or palette
+    ihdr[10] = 0;                    // compression: deflate
+    ihdr[11] = 0;                    // filter method: adaptive (we only use NONE)
+    ihdr[12] = 0;                    // interlace: none
+    png_chunk(buffer, "IHDR", ihdr, sizeof(ihdr));
+
+    if (!truecolor)
+    {
+      png_chunk(buffer, "PLTE", plte.data(), plte.size());
+      if (!trns.empty())
+        png_chunk(buffer, "tRNS", trns.data(), trns.size());
+    }
+
+    png_chunk(buffer, "IDAT", idat.data(), idat_size);
+    png_chunk(buffer, "IEND", nullptr, 0);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void write_png_libpng(cairo_surface_t *image, const ColorMapper &mapper, std::string &buffer)
 {
   try
   {
@@ -456,6 +643,19 @@ void giza_surface_write_to_png_string(cairo_surface_t *image,
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+// Write a Cairo surface to a PNG string. Uses the libdeflate-based writer by default; set
+// GIZA_USE_LIBPNG to fall back to the original libpng path (kept for comparison/safety while
+// the libdeflate writer is being validated).
+void giza_surface_write_to_png_string(cairo_surface_t *image,
+                                      const ColorMapper &mapper,
+                                      std::string &buffer)
+{
+  if (std::getenv("GIZA_USE_LIBPNG") != nullptr)
+    write_png_libpng(image, mapper, buffer);
+  else
+    write_png_libdeflate(image, mapper, buffer);
 }
 
 }  // namespace

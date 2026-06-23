@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 26.6.15
+Version: 26.6.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -26,8 +26,10 @@ BuildRequires: librsvg2-devel >= 2.40.6
 Requires: librsvg2 >= 2.40.6
 BuildRequires: cairo-devel
 BuildRequires: libwebp13-devel
+BuildRequires: libdeflate-devel
 Requires: cairo
 Requires: libwebp13
+Requires: libdeflate
 Requires: smartmet-library-macgyver >= 26.6.15
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
@@ -35,6 +37,7 @@ Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: fmt-devel
 #TestRequires: cairo-devel
 #TestRequires: libwebp13-devel
+#TestRequires: libdeflate-devel
 %if 0%{?rhel} && 0%{rhel} < 8
 #TestRequires: libwebp13-tools
 %endif
@@ -88,6 +91,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Tue Jun 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.23-1.fmi
+- Compress PNG image data with libdeflate instead of libpng/zlib for faster encoding and slightly smaller output
+
 * Mon Jun 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.15-1.fmi
 - Repackaged to resolve ABI issues
 

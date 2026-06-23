@@ -17,7 +17,8 @@ ifneq ($(VERSION_ID),)
 DEFINES += -DVERSION_ID=$(VERSION_ID)
 endif
 
-LIBS += -L$(libdir) -lsmartmet-macgyver $(REQUIRED_LIBS)
+# libdeflate is not a recognized makefile.inc REQUIRES module, so link it directly
+LIBS += -L$(libdir) -lsmartmet-macgyver $(REQUIRED_LIBS) -ldeflate
 
 # What to install
 
