@@ -4,7 +4,7 @@
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
 Version: 26.6.23
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
 URL: https://github.com/fmidev/smartmet-library-giza
@@ -91,6 +91,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Tue Jun 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.23-2.fmi
+- Faster color reduction: avoid per-color heap allocations and redundant gamma/distance computations in the color tree
+
 * Tue Jun 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.23-1.fmi
 - Compress PNG image data with libdeflate instead of libpng/zlib for faster encoding and slightly smaller output
 

@@ -259,8 +259,8 @@ void build_tree(cairo_surface_t *image,
       }
       else
       {
-        Color nearest = colortree.nearest(info.color);
-        double dist = ColorTree::distance(nearest, info.color);
+        double dist = 0;
+        Color nearest = colortree.nearest(info.color, dist);
 
         double limit = factor * log(ratio * info.count);
 
@@ -318,8 +318,8 @@ void build_tree(cairo_surface_t *image,
         }
         else
         {
-          Color nearest = colortree.nearest(info.color);
-          double dist = ColorTree::distance(nearest, info.color);
+          double dist = 0;
+          Color nearest = colortree.nearest(info.color, dist);
 
           const double limit = factor * log(ratio * info.count);
           if (dist < limit)

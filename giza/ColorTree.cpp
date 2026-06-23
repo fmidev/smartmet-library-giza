@@ -306,31 +306,42 @@ inline static double colordiff(double x, double y, double a)
 
 }  // namespace
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Precompute the gamma-corrected components of a color
+ */
+// ----------------------------------------------------------------------
+
+GammaColor ColorTree::gamma(Color color)
+{
+  GammaColor g;
+  g.r = gammacorr(red(color));
+  g.g = gammacorr(green(color));
+  g.b = gammacorr(blue(color));
+  g.a = alpha(color);
+  return g;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Euclidian distance between two gamma-corrected colors
+ *
+ * See http://www.compuphase.com/cmetric.htm
+ */
+// ----------------------------------------------------------------------
+
+double ColorTree::distance(const GammaColor& color1, const GammaColor& color2)
+{
+  const double r = color1.r - color2.r;
+  const double g = color1.g - color2.g;
+  const double b = color1.b - color2.b;
+  const double a = color1.a - color2.a;
+  return sqrt(3 * r * r + 4 * g * g + 2 * b * b + a * a);
+}
+
 double ColorTree::distance(Color color1, Color color2)
 {
-#if 1
-  const double r = gammacorr(red(color1)) - gammacorr(red(color2));
-  const double g = gammacorr(green(color1)) - gammacorr(green(color2));
-  const double b = gammacorr(blue(color1)) - gammacorr(blue(color2));
-  const double a = alpha(color1) - alpha(color2);
-  return sqrt(3 * r * r + 4 * g * g + 2 * b * b + a * a);
-#endif
-
-#if 0
-  double a = alpha(color1) - alpha(color2);
-  return (colordiff(red(color1), red(color2), a) + colordiff(green(color1), green(color2), a) +
-          colordiff(blue(color1), blue(color2), a));
-#endif
-
-#if 0
-  int rmean = (red(color1) + red(color2)) / 2;
-  int r = red(color1) - red(color2);
-  int g = green(color1) - green(color2);
-  int b = blue(color1) - blue(color2);
-  int a = alpha(color1) - alpha(color2);
-  return sqrt((((512 + rmean) * r * r) >> 8) + 4 * g * g + (((767 - rmean) * b * b) >> 8) +
-              4 * a * a);
-#endif
+  return distance(gamma(color1), gamma(color2));
 }
 
 // ----------------------------------------------------------------------
@@ -341,7 +352,7 @@ double ColorTree::distance(Color color1, Color color2)
 
 bool ColorTree::empty() const
 {
-  return (leftcolor == nullptr);
+  return !has_leftcolor;
 }
 // ----------------------------------------------------------------------
 /*!
@@ -389,16 +400,36 @@ void ColorTree::insert(Color color)
 {
   try
   {
-    if (leftcolor == nullptr)
-      leftcolor = std::make_unique<Color>(color);
+    insert(color, gamma(color));
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
 
-    else if (rightcolor == nullptr)
-      rightcolor = std::make_unique<Color>(color);
+void ColorTree::insert(Color color, const GammaColor& colorgamma)
+{
+  try
+  {
+    if (!has_leftcolor)
+    {
+      leftcolor = color;
+      leftgamma = colorgamma;
+      has_leftcolor = true;
+    }
+
+    else if (!has_rightcolor)
+    {
+      rightcolor = color;
+      rightgamma = colorgamma;
+      has_rightcolor = true;
+    }
 
     else
     {
-      const double dist_left = distance(color, *leftcolor);
-      const double dist_right = distance(color, *rightcolor);
+      const double dist_left = distance(colorgamma, leftgamma);
+      const double dist_right = distance(colorgamma, rightgamma);
 
       if (dist_left > dist_right)
       {
@@ -409,7 +440,7 @@ void ColorTree::insert(Color color)
 
         maxright = std::max(maxright, dist_right);
 
-        right->insert(color);
+        right->insert(color, colorgamma);
         ++treesize;
       }
       else
@@ -421,7 +452,7 @@ void ColorTree::insert(Color color)
 
         maxleft = std::max(maxleft, dist_left);
 
-        left->insert(color);
+        left->insert(color, colorgamma);
         ++treesize;
       }
     }
@@ -445,10 +476,24 @@ Color ColorTree::nearest(Color color)
 {
   try
   {
-    Color bestcolor;
     double radius = -1;
-    if (!nearest(color, bestcolor, radius))
+    return nearest(color, radius);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+Color ColorTree::nearest(Color color, double& distance)
+{
+  try
+  {
+    Color bestcolor = 0;
+    double radius = -1;
+    if (!nearest(gamma(color), bestcolor, radius))
       throw Fmi::Exception(BCP, "Invalid use of color reduction tables: no match was found");
+    distance = radius;
     return bestcolor;
   }
   catch (...)
@@ -465,7 +510,7 @@ Color ColorTree::nearest(Color color)
  */
 // ----------------------------------------------------------------------
 
-bool ColorTree::nearest(Color color, Color& nearest, double& radius) const
+bool ColorTree::nearest(const GammaColor& color, Color& nearest, double& radius) const
 {
   try
   {
@@ -476,24 +521,24 @@ bool ColorTree::nearest(Color color, Color& nearest, double& radius) const
     // first test each of the left and right positions to see if
     // one holds a color nearer than the nearest so far discovered
 
-    if (leftcolor != nullptr)
+    if (has_leftcolor)
     {
-      left_dist = distance(color, *leftcolor);
+      left_dist = distance(color, leftgamma);
       if (radius < 0 || left_dist <= radius)
       {
         radius = left_dist;
-        nearest = *leftcolor;
+        nearest = leftcolor;
         found = true;
       }
     }
 
-    if (rightcolor != nullptr)
+    if (has_rightcolor)
     {
-      right_dist = distance(color, *rightcolor);
+      right_dist = distance(color, rightgamma);
       if (radius < 0 || right_dist <= radius)
       {
         radius = right_dist;
-        nearest = *rightcolor;
+        nearest = rightcolor;
         found = true;
       }
     }
