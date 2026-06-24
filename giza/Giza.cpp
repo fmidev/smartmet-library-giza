@@ -4,6 +4,7 @@
 #include <cairo/cairo.h>
 #include <macgyver/Exception.h>
 #include <webp/encode.h>
+#include <webp/mux.h>
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
@@ -84,9 +85,13 @@ void append_to_string(png_structp png, png_bytep data, png_size_t length)
   }
 }
 
-void giza_surface_write_to_webp_string(cairo_surface_t *image,
-                                       std::string &buffer,
-                                       const WebpOptions &options)
+// Convert premultiplied ARGB32 surface data in place to unpremultiplied RGBA
+// byte order as expected by libwebp, and return the pixel data pointer.
+
+unsigned char *surface_to_unpremultiplied_rgba(cairo_surface_t *image,
+                                               int &width,
+                                               int &height,
+                                               int &stride)
 {
   try
   {
@@ -106,9 +111,9 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image,
     // row. Hence the position of the next row is calculated using the stride,
     // and not the width.
 
-    int width = cairo_image_surface_get_width(image);
-    int height = cairo_image_surface_get_height(image);
-    int stride = cairo_image_surface_get_stride(image);
+    width = cairo_image_surface_get_width(image);
+    height = cairo_image_surface_get_height(image);
+    stride = cairo_image_surface_get_stride(image);
 
     // Converting ARGB32 and unpremultiplying by alpha
 
@@ -130,6 +135,25 @@ void giza_surface_write_to_webp_string(cairo_surface_t *image,
         }
       }
     }
+
+    return data;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void giza_surface_write_to_webp_string(cairo_surface_t *image,
+                                       std::string &buffer,
+                                       const WebpOptions &options)
+{
+  try
+  {
+    int width = 0;
+    int height = 0;
+    int stride = 0;
+    unsigned char *data = surface_to_unpremultiplied_rgba(image, width, height, stride);
 
     if (options.level < 0)
     {
@@ -719,6 +743,125 @@ std::string towebp(cairo_surface_t *image,
 
     std::string buffer;
     giza_surface_write_to_webp_string(image, buffer, webpOptions);
+    return buffer;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Write cairo surfaces to an animated WEBP string
+ */
+// ----------------------------------------------------------------------
+
+std::string towebpanim(const std::vector<cairo_surface_t *> &frames,
+                       const std::vector<int> &durations,
+                       int loop_count,
+                       const ColorMapOptions &options,
+                       const WebpOptions &webpOptions)
+{
+  try
+  {
+    if (frames.empty())
+      throw Fmi::Exception(BCP, "Giza::towebpanim requires at least one frame");
+
+    if (durations.size() != frames.size())
+      throw Fmi::Exception(BCP, "Giza::towebpanim requires one duration for each frame");
+
+    int width = cairo_image_surface_get_width(frames[0]);
+    int height = cairo_image_surface_get_height(frames[0]);
+
+    WebPConfig config;
+    if (!WebPConfigInit(&config))
+      throw Fmi::Exception(BCP, "Failed to initialize libwebp configuration");
+    config.lossless = 1;
+    if (webpOptions.level >= 0)
+      if (!WebPConfigLosslessPreset(&config, std::clamp(webpOptions.level, 0, 9)))
+        throw Fmi::Exception(BCP, "Invalid libwebp lossless preset level");
+    if (!WebPValidateConfig(&config))
+      throw Fmi::Exception(BCP, "Invalid libwebp configuration");
+
+    WebPAnimEncoderOptions enc_options;
+    if (!WebPAnimEncoderOptionsInit(&enc_options))
+      throw Fmi::Exception(BCP, "Failed to initialize libwebp animation encoder options");
+    enc_options.anim_params.loop_count = std::max(0, loop_count);
+
+    WebPAnimEncoder *enc = WebPAnimEncoderNew(width, height, &enc_options);
+    if (enc == nullptr)
+      throw Fmi::Exception(BCP, "Failed to create libwebp animation encoder");
+
+    std::string buffer;
+    try
+    {
+      int timestamp = 0;
+      for (std::size_t i = 0; i < frames.size(); i++)
+      {
+        auto *image = frames[i];
+
+        if (cairo_image_surface_get_width(image) != width ||
+            cairo_image_surface_get_height(image) != height)
+          throw Fmi::Exception(BCP, "Giza::towebpanim frames must be of equal size");
+
+        ColorMapper mapper;
+        mapper.options(options);
+        mapper.reduce(image);
+
+        int w = 0;
+        int h = 0;
+        int stride = 0;
+        unsigned char *data = surface_to_unpremultiplied_rgba(image, w, h, stride);
+
+        WebPPicture pic;
+        if (!WebPPictureInit(&pic))
+          throw Fmi::Exception(BCP, "Failed to initialize libwebp picture");
+        pic.use_argb = 1;
+        pic.width = width;
+        pic.height = height;
+
+        if (!WebPPictureImportRGBA(&pic, data, stride))
+        {
+          WebPPictureFree(&pic);
+          throw Fmi::Exception(BCP, "Failed to import frame into libwebp picture");
+        }
+
+        bool ok = WebPAnimEncoderAdd(enc, &pic, timestamp, &config);
+        WebPPictureFree(&pic);
+
+        if (!ok)
+          throw Fmi::Exception(BCP, "libwebp animation encoding failed")
+              .addParameter("error", WebPAnimEncoderGetError(enc));
+
+        timestamp += durations[i];
+      }
+
+      // Flush the encoder with the total duration as the final timestamp
+
+      if (!WebPAnimEncoderAdd(enc, nullptr, timestamp, nullptr))
+        throw Fmi::Exception(BCP, "Failed to flush libwebp animation encoder")
+            .addParameter("error", WebPAnimEncoderGetError(enc));
+
+      WebPData webp_data;
+      WebPDataInit(&webp_data);
+      if (!WebPAnimEncoderAssemble(enc, &webp_data))
+      {
+        WebPDataClear(&webp_data);
+        throw Fmi::Exception(BCP, "Failed to assemble libwebp animation")
+            .addParameter("error", WebPAnimEncoderGetError(enc));
+      }
+
+      buffer.assign(reinterpret_cast<const char *>(webp_data.bytes), webp_data.size);
+      WebPDataClear(&webp_data);
+    }
+    catch (...)
+    {
+      WebPAnimEncoderDelete(enc);
+      throw;
+    }
+
+    WebPAnimEncoderDelete(enc);
     return buffer;
   }
   catch (...)
