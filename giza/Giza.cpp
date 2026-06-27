@@ -12,7 +12,6 @@
 #include <libdeflate.h>
 #include <map>
 #include <png.h>
-#include <set>
 #include <vector>
 
 namespace Giza
@@ -341,14 +340,10 @@ void write_png_libdeflate(cairo_surface_t *image, const ColorMapper &mapper, std
     const int height = cairo_image_surface_get_height(image);
     const int stride = cairo_image_surface_get_stride(image);
 
-    // Same truecolor-vs-palette decision as the libpng path
-    const auto &colormap = mapper.colormap();
-    std::set<Color> unique_colors;
-    if (!mapper.trueColor())
-      for (const ColorMap::value_type &from_to : colormap)
-        unique_colors.insert(from_to.second);
-
-    const bool truecolor = (mapper.trueColor() || unique_colors.size() > 256);
+    // Same truecolor-vs-palette decision as the libpng path. The palette colors
+    // are ordered by descending use count, which is also the palette index order.
+    const auto &palette = mapper.palette();
+    const bool truecolor = (mapper.trueColor() || palette.size() > 256);
 
     // Build the raw (unfiltered) scanline buffer and, for palette mode, the palette tables.
     std::string raw;
@@ -386,11 +381,12 @@ void write_png_libdeflate(cairo_surface_t *image, const ColorMapper &mapper, std
     }
     else
     {
-      // Assign palette indices in the (alpha-ascending) order of the color set, exactly as the
-      // libpng path, so transparent colors come first and tRNS stays minimal.
+      // Assign palette indices in use-count order (same as the libpng path). Note that
+      // transparent colors are no longer guaranteed to come first, so tRNS may extend
+      // further into the palette than with the old alpha-ascending ordering.
       std::map<Color, int> color_indices;
       int num_transparent = 0;
-      for (const Color color : unique_colors)
+      for (const Color color : palette)
       {
         const int idx = static_cast<int>(color_indices.size());
         color_indices.insert(std::make_pair(color, idx));
@@ -445,11 +441,11 @@ void write_png_libdeflate(cairo_surface_t *image, const ColorMapper &mapper, std
     ihdr[5] = (height >> 16) & 0xff;
     ihdr[6] = (height >> 8) & 0xff;
     ihdr[7] = height & 0xff;
-    ihdr[8] = 8;                     // bit depth
-    ihdr[9] = truecolor ? 6 : 3;     // color type: RGBA or palette
-    ihdr[10] = 0;                    // compression: deflate
-    ihdr[11] = 0;                    // filter method: adaptive (we only use NONE)
-    ihdr[12] = 0;                    // interlace: none
+    ihdr[8] = 8;                  // bit depth
+    ihdr[9] = truecolor ? 6 : 3;  // color type: RGBA or palette
+    ihdr[10] = 0;                 // compression: deflate
+    ihdr[11] = 0;                 // filter method: adaptive (we only use NONE)
+    ihdr[12] = 0;                 // interlace: none
     png_chunk(buffer, "IHDR", ihdr, sizeof(ihdr));
 
     if (!truecolor)
@@ -516,19 +512,12 @@ void write_png_libpng(cairo_surface_t *image, const ColorMapper &mapper, std::st
     png_set_filter(png, 0, PNG_FILTER_NONE);
     png_set_compression_level(png, 3);
 
-    // Determine the unique colours in the colour conversion map, and
-    // set true colour mode if there are more than 256 colours.
+    // The palette colors ordered by descending use count. True colour mode is
+    // used if there are more than 256 colours.
 
-    const auto &colormap = mapper.colormap();
+    const auto &palette = mapper.palette();
 
-    std::set<Color> unique_colors;
-    if (!mapper.trueColor())
-    {
-      for (const ColorMap::value_type &from_to : colormap)
-        unique_colors.insert(from_to.second);
-    }
-
-    bool truecolor = (mapper.trueColor() || unique_colors.size() > 256);
+    bool truecolor = (mapper.trueColor() || palette.size() > 256);
 
     // Generate the PNG data to the output
 
@@ -579,20 +568,15 @@ void write_png_libpng(cairo_surface_t *image, const ColorMapper &mapper, std::st
       int num_transparent = 0;
       int num_colors = 0;
 
-      // Collect the unique colours in the palette. Note that since the
-      // alpha channel is the highest byte in cairo ARGB data, any transparent
-      // colour will have a smaller alpha value than 255. Hence the colours
-      // stored in a set will produce the transparent colours first. This is
-      // good for us, since we want to minimize the size of the tRNS table
-      // storing the transparency values for the colours in the palette
-      // with transparency. In effect the following loop will increment
-      // num_transparent one by one until the first opaque colour is
-      // encountered.
+      // Collect the colours in the palette in use-count order. Since transparent
+      // colours are no longer guaranteed to come first, num_transparent may extend
+      // further into the palette than with the old alpha-ascending ordering. The
+      // tRNS table is still only as long as the highest-indexed transparent colour.
 
       // This will store the colour map index for each colour
       std::map<Color, int> color_indices;
 
-      for (const Color color : unique_colors)
+      for (const Color color : palette)
       {
         // Store the index for this new unique colour
         color_indices.insert(std::make_pair(color, color_indices.size()));

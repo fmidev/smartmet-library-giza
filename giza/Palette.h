@@ -9,14 +9,15 @@ class Palette
 {
  public:
   Palette() = delete;
-  Palette(const ColorMap& colormap);
+  // The colors must already be deduplicated and in the desired index order,
+  // e.g. ColorMapper::palette().
+  explicit Palette(const std::vector<Color>& colors);
 
-  std::size_t size() const { return itsSize; }
+  std::size_t size() const { return itsPalette.size(); }
   std::size_t index(Color color) const { return itsIndexes.at(color); }
   Color color(std::size_t index) const { return itsPalette.at(index); }
 
  private:
-  std::size_t itsSize;
   std::vector<Color> itsPalette;
   std::unordered_map<Color, std::size_t> itsIndexes;
 

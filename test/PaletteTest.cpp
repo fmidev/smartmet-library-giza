@@ -26,22 +26,25 @@ void palette()
 
   // Actual test begins
 
-  const auto& colormap = mapper.colormap();
-  Giza::Palette palette(colormap);
+  Giza::Palette palette(mapper.palette());
 
   cairo_surface_destroy(image);
 
   if (palette.size() < 135 || palette.size() > 136)
-      TEST_FAILED(("Expected to built a palette of size 135 or 136. Got "
-              + std::to_string(palette.size())).c_str());
+    TEST_FAILED(
+        ("Expected to built a palette of size 135 or 136. Got " + std::to_string(palette.size()))
+            .c_str());
 
 #if 0
 	for(std::size_t i=0; i<palette.size(); i++)
 	  std::cout << i << " : " << hexcolor(palette.color(i)) << std::endl;
 #endif
 
-  if (palette.color(0) != 0xddabb386)
-    TEST_FAILED("Color 0 should be #ddabb386, not " + hexcolor(palette.color(0)));
+  // The palette is ordered by descending use count, so index 0 is the most used
+  // color. This ordering is deterministic.
+  if (palette.color(0) != 0xfff5b400)
+    TEST_FAILED("Color 0 should be the most used color #fff5b400, not " +
+                hexcolor(palette.color(0)));
 
   TEST_PASSED();
 }

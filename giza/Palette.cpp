@@ -9,39 +9,15 @@ namespace Giza
  */
 // ----------------------------------------------------------------------
 
-Palette::Palette(const ColorMap& colormap) : itsSize(0)
+Palette::Palette(const std::vector<Color>& colors) : itsPalette(colors)
 {
   try
   {
-    // Assign unique index for all colours staring from zero.
-    // Since there are potentially long sequences of color,
-    // we try to optimize for speed by remembering the last
-    // color added to the palette.
-
-    Color prevcolor;
-    bool first = true;
-
-    for (const auto& colorpair : colormap)
-    {
-      Color newcolor = colorpair.second;
-
-      if (first)
-      {
-        itsIndexes.insert(std::make_pair(newcolor, itsSize++));
-        itsPalette.push_back(newcolor);
-        prevcolor = newcolor;
-        first = false;
-      }
-      else if (newcolor != prevcolor)
-      {
-        if (itsIndexes.insert(std::make_pair(newcolor, itsSize)).second)
-        {
-          itsPalette.push_back(newcolor);
-          ++itsSize;
-        }
-        prevcolor = newcolor;
-      }
-    }
+    // The colors are already deduplicated and in index order, so the index of
+    // each color is simply its position in the vector.
+    itsIndexes.reserve(itsPalette.size());
+    for (std::size_t i = 0; i < itsPalette.size(); ++i)
+      itsIndexes.emplace(itsPalette[i], i);
   }
   catch (...)
   {
