@@ -27,6 +27,7 @@ Requires: librsvg2 >= 2.40.6
 BuildRequires: cairo-devel
 BuildRequires: libwebp13-devel
 BuildRequires: libdeflate-devel
+BuildRequires: gcem-devel
 Requires: cairo
 Requires: libwebp13
 Requires: libdeflate
