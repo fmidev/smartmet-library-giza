@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 26.6.27
+Version: 26.9.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -92,6 +92,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Tue Sep 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.15-1.fmi
+- Added topng_argb for encoding precoloured straight alpha pixels as RGBA PNG with libdeflate, without colour reduction
+
 * Sat Jun 27 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.27-1.fmi
 - Faster colour reduction: the per-pixel histogram now uses an open-addressing flat container (boost::unordered_flat_map where available, with a hand-rolled fallback for Boost < 1.81), and the colour map uses std::unordered_map; the palette is ordered by descending use count
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <cairo/cairo.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -25,6 +26,12 @@ std::string towebpanim(const std::vector<cairo_surface_t*>& frames,
                        int loop_count,
                        const ColorMapOptions& options,
                        const WebpOptions& webpOptions);
+
+// Encode straight alpha 0xAARRGGBB pixels as an RGBA PNG as they are,
+// with no colour reduction. This is for images which are already
+// coloured, such as satellite composites embedded into an SVG. The level
+// is the libdeflate level, 0 stores and 1 is fast and compresses well.
+std::string topng_argb(const std::uint32_t* pixels, int width, int height, int level = 1);
 
 uint* toargb(cairo_surface_t* image);
 uint* toargb(cairo_surface_t* image, const ColorMapOptions& options);
