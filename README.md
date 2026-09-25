@@ -17,6 +17,10 @@ The giza library provides color mapping and SVG rendering capabilities for Smart
 
 Used by SmartMet rendering tools such as [smartmet-qdcontour](https://github.com/fmidev/smartmet-qdcontour) and [smartmet-qdcontour2](https://github.com/fmidev/smartmet-qdcontour2) to apply color maps to weather data visualizations.
 
+## Documentation
+
+- [Developer guide](docs/developer-guide.md): colour reduction, PNG and WebP output, pitfalls
+
 ## License
 
 MIT — see [LICENSE](LICENSE)
