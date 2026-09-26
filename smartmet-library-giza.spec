@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 26.9.15
+Version: 26.9.26
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -92,6 +92,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Sat Sep 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.26-1.fmi
+- Removed the libpng fallback PNG writer (GIZA_USE_LIBPNG); all PNG output is written with libdeflate and libpng is no longer used
+
 * Tue Sep 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.15-1.fmi
 - Added topng_argb for encoding precoloured straight alpha pixels as RGBA PNG with libdeflate, without colour reduction
 

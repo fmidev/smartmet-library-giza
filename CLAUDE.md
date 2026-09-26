@@ -45,7 +45,7 @@ Color reduction pipeline:
 3. **`Palette`** — converts a `ColorMap` into indexed palette entries (for PNG palette mode when <= 256 colors).
 4. **`ColorMapOptions`** — controls quality (default 10), max colors, error convergence factor, and truecolor forcing.
 
-PNG output uses libpng directly (not cairo's PNG writer) to support palette mode with transparency (tRNS). Cairo surfaces use premultiplied alpha; giza handles unpremultiplication during output.
+PNG output is written by giza's own PNG container writer with libdeflate compressing IDAT (not libpng, not cairo's PNG writer), which supports palette mode with transparency (tRNS). Cairo surfaces use premultiplied alpha; giza handles unpremultiplication during output. `topng_argb()` encodes precoloured straight-alpha pixels byte for byte (no colour reduction).
 
 ## RHEL version handling
 
