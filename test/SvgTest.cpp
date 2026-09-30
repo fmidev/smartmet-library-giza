@@ -335,6 +335,27 @@ void tops()
 }
 
 // Test driver
+// SVG input with XML entity declarations is not accepted
+void entities_rejected()
+{
+  const std::string svg =
+      "<?xml version=\"1.0\"?>"
+      "<!DOCTYPE svg [<!ENTITY a \"aaaaaaaaaa\"><!ENTITY b \"&a;&a;&a;&a;&a;\">]>"
+      "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><text>&b;</text></svg>";
+  bool thrown = false;
+  try
+  {
+    Giza::Svg::topng(svg);
+  }
+  catch (...)
+  {
+    thrown = true;
+  }
+  if (!thrown)
+    TEST_FAILED("SVG with entity declarations should be rejected");
+  TEST_PASSED();
+}
+
 class tests : public tframe::tests
 {
   // Overridden message separator
@@ -352,6 +373,7 @@ class tests : public tframe::tests
     TEST(towebp_transparency);
     TEST(towebp_transparent_symbols);
     TEST(towebp_compression_level);
+    TEST(entities_rejected);
 
     // TEST(tops);	// CreationDate changes every time!
   }

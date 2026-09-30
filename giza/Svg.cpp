@@ -20,17 +20,26 @@ namespace
 /*!
  * \brief Create an RsvgHandle from an in-memory SVG string
  *
- * Uses RSVG_HANDLE_FLAG_UNLIMITED so libxml2's 10/20 MB safety limits
- * do not reject large SVG inputs.
+ * Large SVG inputs need RSVG_HANDLE_FLAG_UNLIMITED, since libxml2 rejects
+ * documents over its 10/20 MB safety limits. The flag also lifts libxml2's
+ * other safety limits, so it is used only for inputs that need it, and XML
+ * entity declarations, which the generated SVGs never contain, are not
+ * accepted at all.
  */
 // ----------------------------------------------------------------------
 
 RsvgHandle *make_rsvg_handle(const std::string &svg)
 {
+  if (svg.find("<!ENTITY") != std::string::npos)
+    throw Fmi::Exception(BCP, "SVG input with XML entity declarations is not supported");
+
+  // libxml2's default limit for a single text node is 10 MB
+  const std::size_t default_limit = 10 * 1000 * 1000;
+  const auto flags = (svg.size() >= default_limit ? RSVG_HANDLE_FLAG_UNLIMITED : RSVG_HANDLE_FLAGS_NONE);
+
   const auto *indata = reinterpret_cast<const guint8 *>(svg.c_str());
   GInputStream *stream = g_memory_input_stream_new_from_data(indata, svg.size(), nullptr);
-  RsvgHandle *handle = rsvg_handle_new_from_stream_sync(
-      stream, nullptr, RSVG_HANDLE_FLAG_UNLIMITED, nullptr, nullptr);
+  RsvgHandle *handle = rsvg_handle_new_from_stream_sync(stream, nullptr, flags, nullptr, nullptr);
   g_object_unref(stream);
 
   if (handle == nullptr)
