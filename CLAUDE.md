@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
+Full developer documentation: `docs/developer-guide.md`.
+
 **smartmet-library-giza** is a C++17 library providing Cairo-based image rendering and color reduction for the SmartMet Server ecosystem (Finnish Meteorological Institute). It converts Cairo ARGB32 surfaces to PNG (with palette optimization), WebP, PDF, EPS, and raw ARGB. It also renders SVG input to these formats via librsvg.
 
 ## Build Commands
