@@ -341,7 +341,7 @@ void write_png_libdeflate(cairo_surface_t *image, const ColorMapper &mapper, std
       }
       trns.resize(num_transparent);  // keep only the leading transparent entries
 
-      const size_t rowbytes = static_cast<size_t>(width);
+      const auto rowbytes = static_cast<size_t>(width);
       raw.resize(static_cast<size_t>(height) * (1 + rowbytes));
       auto *out = reinterpret_cast<uint8_t *>(raw.data());
       for (int i = 0; i < height; i++)
