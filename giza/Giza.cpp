@@ -3,6 +3,7 @@
 #include "WebpOptions.h"
 #include <cairo/cairo.h>
 #include <macgyver/Exception.h>
+#include <macgyver/StringConversion.h>
 #include <webp/encode.h>
 #include <webp/mux.h>
 #include <algorithm>
@@ -258,9 +259,9 @@ int libdeflate_level()
 {
   if (const char *env = std::getenv("GIZA_PNG_LEVEL"))
   {
-    const int level = std::atoi(env);
-    if (level >= 1 && level <= 12)
-      return level;
+    const auto level = Fmi::stoi_opt(env);
+    if (level && *level >= 1 && *level <= 12)
+      return *level;
   }
   return 1;
 }
