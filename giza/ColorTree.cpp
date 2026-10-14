@@ -15,7 +15,7 @@ namespace
 constexpr std::array<double, 256> GammaCorrections()
 {
   std::array<double, 256> result = {0};
-  double gamma = 2.2f;
+  double gamma = 2.2F;
   double coeff = 255/(gcem::pow(255.,gamma));
   for(int i=0; i<256; i++)
   {
