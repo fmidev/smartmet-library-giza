@@ -304,7 +304,7 @@ void write_png_libdeflate(cairo_surface_t *image, const ColorMapper &mapper, std
         *out++ = 0;  // PNG_FILTER_NONE
         for (int j = 0; j < width; j++)
         {
-          uint32_t pixel;
+          uint32_t pixel = 0;
           std::memcpy(&pixel, row + j * 4, sizeof(pixel));
           const uint8_t a = (pixel & 0xff000000U) >> 24;
           if (a == 0)
