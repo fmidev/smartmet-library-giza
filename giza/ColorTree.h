@@ -34,6 +34,7 @@ class ColorTree
   ColorTree& operator=(const ColorTree& other) = delete;
   ColorTree(ColorTree&& other) = delete;
   ColorTree& operator=(ColorTree&& other) = delete;
+  ~ColorTree() = default;
 
   void insert(Color color);
   int size() const;
