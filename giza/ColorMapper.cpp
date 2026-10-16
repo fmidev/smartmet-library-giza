@@ -205,6 +205,54 @@ inline void set_color(unsigned char *data, int i, int j, int stride, Color color
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Test whether columns i-2..i of rows j+1 and j+2 all have the given color
+ */
+// ----------------------------------------------------------------------
+
+inline bool block_below_matches(unsigned char *data, int i, int j, int stride, Color color)
+{
+  // Test the farther row (j+2) first: it is less spatially correlated
+  // with the matched run on row j, so it is the likeliest to differ and
+  // short-circuit the && chain (e.g. for a band exactly two rows tall).
+  return (get_color(data, i - 2, j + 2, stride) == color &&
+          get_color(data, i - 1, j + 2, stride) == color &&
+          get_color(data, i, j + 2, stride) == color &&
+          get_color(data, i - 2, j + 1, stride) == color &&
+          get_color(data, i - 1, j + 1, stride) == color &&
+          get_color(data, i, j + 1, stride) == color);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Count a color which differs from the most recent one (last1)
+ *
+ * Updates the last1/last2 pointer cache so that last1 points to the color.
+ */
+// ----------------------------------------------------------------------
+
+inline void count_other_color(FlatHistogram &counter,
+                              Color color,
+                              ColorInfo *&last1,
+                              ColorInfo *&last2)
+{
+  if (last2->color == color)
+  {
+    ++(*last2);
+    std::swap(last1, last2);
+    return;
+  }
+
+  // get() may grow the table, but only the inline slot array is
+  // reallocated; the ColorInfo records (and hence last1/last2) live in a
+  // deque and keep their addresses.
+  ColorInfo *p = counter.get(color);
+  last2 = last1;
+  last1 = p;
+  ++(*last1);
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Calculate the occurrance count of each color in the given image
  *
  * \param image The image
@@ -276,37 +324,13 @@ ColorHistogram calc_histogram(cairo_surface_t *image)
           // test whether they are the top edge of a solid 3x3 box. The current
           // run covers row j at columns i-2..i, so only the next two rows remain
           // to be checked.
-          if (run >= 3 && !last1->keeper && j + 2 < height)
-          {
-            // Test the farther row (j+2) first: it is less spatially correlated
-            // with the matched run on row j, so it is the likeliest to differ and
-            // short-circuit the && chain (e.g. for a band exactly two rows tall).
-            if (get_color(data, i - 2, j + 2, stride) == color &&
-                get_color(data, i - 1, j + 2, stride) == color &&
-                get_color(data, i, j + 2, stride) == color &&
-                get_color(data, i - 2, j + 1, stride) == color &&
-                get_color(data, i - 1, j + 1, stride) == color &&
-                get_color(data, i, j + 1, stride) == color)
-            {
-              last1->keep();
-            }
-          }
-        }
-        else if (last2->color == color)
-        {
-          ++(*last2);
-          std::swap(last1, last2);
-          run = 1;
+          if (run >= 3 && !last1->keeper && j + 2 < height &&
+              block_below_matches(data, i, j, stride, color))
+            last1->keep();
         }
         else
         {
-          // get() may grow the table, but only the inline slot array is
-          // reallocated; the ColorInfo records (and hence last1/last2) live in a
-          // deque and keep their addresses.
-          ColorInfo *p = counter.get(color);
-          last2 = last1;
-          last1 = p;
-          ++(*last1);
+          count_other_color(counter, color, last1, last2);
           run = 1;
         }
       }
