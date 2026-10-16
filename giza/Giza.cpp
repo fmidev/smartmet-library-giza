@@ -266,6 +266,83 @@ int libdeflate_level()
   return 1;
 }
 
+// The raw (unfiltered) RGBA scanlines of a truecolor PNG image
+std::string truecolor_scanlines(const unsigned char *data, int width, int height, int stride)
+{
+  std::string raw;
+  const size_t rowbytes = static_cast<size_t>(width) * 4;
+  raw.resize(static_cast<size_t>(height) * (1 + rowbytes));
+  auto *out = reinterpret_cast<uint8_t *>(raw.data());
+  for (int i = 0; i < height; i++)
+  {
+    const auto *row = data + static_cast<size_t>(i) * stride;
+    *out++ = 0;  // PNG_FILTER_NONE
+    for (int j = 0; j < width; j++)
+    {
+      uint32_t pixel = 0;
+      std::memcpy(&pixel, row + j * 4, sizeof(pixel));
+      const uint8_t a = (pixel & 0xff000000U) >> 24;
+      if (a == 0)
+      {
+        out[0] = out[1] = out[2] = out[3] = 0;  // normalize fully transparent pixels
+      }
+      else
+      {
+        out[0] = (((pixel & 0xff0000U) >> 16) * 255 + a / 2) / a;
+        out[1] = (((pixel & 0x00ff00U) >> 8) * 255 + a / 2) / a;
+        out[2] = (((pixel & 0x0000ffU) >> 0) * 255 + a / 2) / a;
+        out[3] = a;
+      }
+      out += 4;
+    }
+  }
+  return raw;
+}
+
+// The raw (unfiltered) scanlines of a palette PNG image and the palette tables
+std::string palette_scanlines(const std::vector<Color> &palette,
+                              const unsigned char *data,
+                              int width,
+                              int height,
+                              int stride,
+                              std::vector<uint8_t> &plte,
+                              std::vector<uint8_t> &trns)
+{
+  std::string raw;
+  // Assign palette indices in use-count order. Transparent colors are not
+  // guaranteed to come first, so tRNS may extend further into the palette.
+  std::map<Color, int> color_indices;
+  int num_transparent = 0;
+  for (const Color color : palette)
+  {
+    const int idx = static_cast<int>(color_indices.size());
+    color_indices.insert(std::make_pair(color, idx));
+    const auto a = alpha(color);
+    plte.push_back(unpremultiply_color_component(red(color), a));
+    plte.push_back(unpremultiply_color_component(green(color), a));
+    plte.push_back(unpremultiply_color_component(blue(color), a));
+    trns.push_back(a);
+    if (a < 255)
+      num_transparent = idx + 1;
+  }
+  trns.resize(num_transparent);  // keep only the leading transparent entries
+
+  const auto rowbytes = static_cast<size_t>(width);
+  raw.resize(static_cast<size_t>(height) * (1 + rowbytes));
+  auto *out = reinterpret_cast<uint8_t *>(raw.data());
+  for (int i = 0; i < height; i++)
+  {
+    const auto *row = data + static_cast<size_t>(i) * stride;
+    *out++ = 0;  // PNG_FILTER_NONE
+    for (int j = 0; j < width; j++)
+    {
+      Color c = *reinterpret_cast<const Color *>(row + j * 4);
+      *out++ = static_cast<uint8_t>(color_indices.at(c));
+    }
+  }
+  return raw;
+}
+
 void write_png_libdeflate(cairo_surface_t *image, const ColorMapper &mapper, std::string &buffer)
 {
   try
@@ -294,68 +371,9 @@ void write_png_libdeflate(cairo_surface_t *image, const ColorMapper &mapper, std
     std::vector<uint8_t> trns;  // leading transparent alphas
 
     if (truecolor)
-    {
-      const size_t rowbytes = static_cast<size_t>(width) * 4;
-      raw.resize(static_cast<size_t>(height) * (1 + rowbytes));
-      auto *out = reinterpret_cast<uint8_t *>(raw.data());
-      for (int i = 0; i < height; i++)
-      {
-        const auto *row = data + static_cast<size_t>(i) * stride;
-        *out++ = 0;  // PNG_FILTER_NONE
-        for (int j = 0; j < width; j++)
-        {
-          uint32_t pixel = 0;
-          std::memcpy(&pixel, row + j * 4, sizeof(pixel));
-          const uint8_t a = (pixel & 0xff000000U) >> 24;
-          if (a == 0)
-          {
-            out[0] = out[1] = out[2] = out[3] = 0;  // normalize fully transparent pixels
-          }
-          else
-          {
-            out[0] = (((pixel & 0xff0000U) >> 16) * 255 + a / 2) / a;
-            out[1] = (((pixel & 0x00ff00U) >> 8) * 255 + a / 2) / a;
-            out[2] = (((pixel & 0x0000ffU) >> 0) * 255 + a / 2) / a;
-            out[3] = a;
-          }
-          out += 4;
-        }
-      }
-    }
+      raw = truecolor_scanlines(data, width, height, stride);
     else
-    {
-      // Assign palette indices in use-count order. Transparent colors are not
-      // guaranteed to come first, so tRNS may extend further into the palette.
-      std::map<Color, int> color_indices;
-      int num_transparent = 0;
-      for (const Color color : palette)
-      {
-        const int idx = static_cast<int>(color_indices.size());
-        color_indices.insert(std::make_pair(color, idx));
-        const auto a = alpha(color);
-        plte.push_back(unpremultiply_color_component(red(color), a));
-        plte.push_back(unpremultiply_color_component(green(color), a));
-        plte.push_back(unpremultiply_color_component(blue(color), a));
-        trns.push_back(a);
-        if (a < 255)
-          num_transparent = idx + 1;
-      }
-      trns.resize(num_transparent);  // keep only the leading transparent entries
-
-      const auto rowbytes = static_cast<size_t>(width);
-      raw.resize(static_cast<size_t>(height) * (1 + rowbytes));
-      auto *out = reinterpret_cast<uint8_t *>(raw.data());
-      for (int i = 0; i < height; i++)
-      {
-        const auto *row = data + static_cast<size_t>(i) * stride;
-        *out++ = 0;  // PNG_FILTER_NONE
-        for (int j = 0; j < width; j++)
-        {
-          Color c = *reinterpret_cast<const Color *>(row + j * 4);
-          *out++ = static_cast<uint8_t>(color_indices.at(c));
-        }
-      }
-    }
+      raw = palette_scanlines(palette, data, width, height, stride, plte, trns);
 
     // Compress the scanlines into the IDAT zlib datastream
     auto *compressor = libdeflate_alloc_compressor(libdeflate_level());
