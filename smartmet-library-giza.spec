@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 26.10.15
+Version: 26.10.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -21,7 +21,7 @@ BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: %{smartmet_boost}-devel
-BuildRequires: smartmet-library-macgyver-devel >= 26.10.15
+BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
 BuildRequires: librsvg2-devel >= 2.40.6
 Requires: librsvg2 >= 2.40.6
 BuildRequires: cairo-devel
@@ -31,7 +31,7 @@ BuildRequires: gcem-devel
 Requires: cairo
 Requires: libwebp13
 Requires: libdeflate
-Requires: smartmet-library-macgyver >= 26.10.15
+Requires: smartmet-library-macgyver >= 26.10.16
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
@@ -45,8 +45,8 @@ Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: %{smartmet_boost}-devel
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
-#TestRequires: smartmet-library-macgyver-devel >= 26.10.15
-#TestRequires: smartmet-library-macgyver >= 26.10.15
+#TestRequires: smartmet-library-macgyver-devel >= 26.10.16
+#TestRequires: smartmet-library-macgyver >= 26.10.16
 #TestRequires: ImageMagick
 #TestRequires: librsvg2-devel >= 2.40.6
 #TestRequires: librsvg2 >= 2.40.6
@@ -92,6 +92,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-1.fmi
+- Rebuilt due to ABI changes in macgyver, spine, newbase and other libraries
+
 * Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-1.fmi
 - Fixed mechanical clang-tidy findings (internal linkage, unused parameters, initialization, redundant code), no functional changes
 - Fixed clang-tidy style findings (loops, nested conditionals, dead code)
