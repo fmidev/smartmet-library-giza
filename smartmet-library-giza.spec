@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-library-%{DIRNAME}
 Summary: Giza extensions to Cairo Graphics
 Name: %{SPECNAME}
-Version: 26.10.16
+Version: 26.10.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Libraries
@@ -31,7 +31,7 @@ BuildRequires: gcem-devel
 Requires: cairo
 Requires: libwebp13
 Requires: libdeflate
-Requires: smartmet-library-macgyver >= 26.10.16
+Requires: smartmet-library-macgyver >= 26.10.17
 Provides: %{SPECNAME}
 Obsoletes: libsmartmet-giza < 16.12.21
 Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
@@ -46,7 +46,7 @@ Obsoletes: libsmartmet-giza-debuginfo < 16.12.21
 #TestRequires: gcc-c++
 #TestRequires: smartmet-library-regression
 #TestRequires: smartmet-library-macgyver-devel >= 26.10.16
-#TestRequires: smartmet-library-macgyver >= 26.10.16
+#TestRequires: smartmet-library-macgyver >= 26.10.17
 #TestRequires: ImageMagick
 #TestRequires: librsvg2-devel >= 2.40.6
 #TestRequires: librsvg2 >= 2.40.6
@@ -92,6 +92,9 @@ Giza library development files
 %{_includedir}/smartmet/%{DIRNAME}
 
 %changelog
+* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-1.fmi
+- Split functions with a cognitive complexity above 25 into smaller helpers, no functional changes
+
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-1.fmi
 - Rebuilt due to ABI changes in macgyver, spine, newbase and other libraries
 
