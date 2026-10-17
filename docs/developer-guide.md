@@ -50,7 +50,7 @@ place**:
 
 1. If `truecolor` is set, nothing is done.
 2. The colour histogram is computed. If the image has more than 100 distinct alpha values,
-   or any alpha below 128 (soft transparency), colours are not reduced: with fewer than 256
+   or any alpha below 128 (fully transparent pixels included), colours are not reduced: with fewer than 256
    colours the image is written as a palette PNG as it is, otherwise as true colour.
 3. Otherwise the colours are fed into a `ColorTree` in order of popularity; a colour closer
    than the error limit to an already chosen colour is mapped to it. The limit follows from
@@ -88,7 +88,7 @@ the old (RHEL 7) and current librsvg APIs with it.
 
 * **`reduce()` changes the surface.** Do not reuse the surface after `topng()` or
   `towebp()` expecting the original colours.
-* **Soft transparency disables colour reduction** (§3), so semi-transparent layers make
-  larger PNGs.
+* **Transparency disables colour reduction** (§3): any pixel with an alpha below 128,
+  also a fully transparent one, makes images with 256 or more colours true-colour PNGs.
 * **`maxcolors` is a target, not a guarantee** (§3).
 * **`toargb()` results must be freed with `delete[]`.**

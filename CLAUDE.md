@@ -26,11 +26,11 @@ cd test && make SvgTest && ./SvgTest
 cd test && make PaletteTest && ./PaletteTest
 ```
 
-Tests use the FMI `regression/tframe.h` framework (not Boost.Test). Each test binary is standalone. Tests compare output images against expected results in `test/output/` using PSNR-based image comparison (threshold: 30 dB). Failed outputs go to `test/failures/`.
+Tests use the FMI `regression/tframe.h` framework (not Boost.Test). Each test binary is standalone. Tests compare output images against expected results in `test/output/` using PSNR-based image comparison (`test/CompareImages.sh`: at least 50 dB is OK, 20–50 dB a warning, below 20 dB a failure). Failed outputs go to `test/failures/`.
 
 ## Dependencies
 
-- **Build**: `smartmet-library-macgyver`, `librsvg2-devel`, `cairo-devel`, `libwebp13-devel`, `boost`
+- **Build**: `smartmet-library-macgyver`, `librsvg2-devel`, `cairo-devel`, `libwebp13-devel`, `libdeflate-devel` (linked with `-ldeflate` directly), `gcem-devel`, `boost`
 - **Tests additionally**: `ImageMagick` (Magick++ for image comparison), `fmt`, `smartmet-library-regression`
 - **pkg-config modules** (REQUIRES in Makefile): `librsvg`, `cairo`, `webp`
 
