@@ -5,7 +5,8 @@ INCDIR = smartmet/$(SUBNAME)
 
 REQUIRES = librsvg cairo webp
 
-include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
+include $(or $(PREFIX),$(shell smartbuildcfg --prefix))/share/smartmet/devel/makefile.inc
+
 # Compiler options
 
 DEFINES = -DUNIX -D_REENTRANT
